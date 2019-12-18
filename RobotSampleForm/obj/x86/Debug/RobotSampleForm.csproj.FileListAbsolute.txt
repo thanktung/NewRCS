@@ -1,0 +1,65 @@
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\bin\Debug\RobotSampleForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\bin\Debug\RobotSampleForm.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\bin\Debug\AutoMationTest.dll
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\bin\Debug\AutoMationTest.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csprojResolveAssemblyReference.cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.RobotSample.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.Properties.Resources.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csproj.GenerateResource.Cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest\RobotSampleForm\obj\x86\Debug\RobotSampleForm.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\RobotSampleForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\RobotSampleForm.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\AutoMationTest.dll
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\AutoMationTest.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csprojResolveAssemblyReference.cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.RobotSample.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.Properties.Resources.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csproj.GenerateResource.Cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.pdb
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\RobotSampleForm.exe
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\RobotSampleForm.pdb
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\AutoMationTest.dll
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\Automation.BDaq4.dll
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\bin\Debug\AutoMationTest.pdb
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.RobotSample.resources
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.Properties.Resources.resources
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csproj.GenerateResource.Cache
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.exe
+E:\Project\2010\AutoMationTest_Form\RobotSampleForm\obj\x86\Debug\RobotSampleForm.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\RobotSampleForm.exe
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\RobotSampleForm.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\AutoMationTest.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\Automation.BDaq4.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\AutoMationTest.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.RobotSample.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.Properties.Resources.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csproj.GenerateResource.Cache
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.exe
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\Emgu.CV.World.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\EmgucvLib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\PylonC.NET.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\PylonC.NETSupportLibrary.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\VI_Lib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\zxing.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\EmgucvExLib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csprojResolveAssemblyReference.cache
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\RobotSampleForm.exe
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\RobotSampleForm.pdb
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\AutoMationTest.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\Automation.BDaq4.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\Emgu.CV.World.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\EmgucvLib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\PylonC.NET.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\PylonC.NETSupportLibrary.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\VI_Lib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\zxing.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\EmgucvExLib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\bin\Debug\AutoMationTest.pdb
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.RobotSample.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.Properties.Resources.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.csproj.GenerateResource.Cache
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.exe
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotSampleForm\obj\x86\Debug\RobotSampleForm.pdb

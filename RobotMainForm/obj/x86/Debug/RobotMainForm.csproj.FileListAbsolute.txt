@@ -1,0 +1,127 @@
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\RobotMainForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\RobotMainForm.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\AutoMationTest.dll
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\AutoMationTest.pdb
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.csprojResolveAssemblyReference.cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.FixPriority.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.FixtureSet.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.LoginForm.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.MainForm.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.Properties.Resources.resources
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.GenerateResource.Cache
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.exe
+E:\Tool_By Ricard\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.pdb
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\RobotMainForm.exe
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\RobotMainForm.pdb
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\AutoMationTest.dll
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\Automation.BDaq4.dll
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\bin\Debug\AutoMationTest.pdb
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.FixPriority.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.FixtureControl.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.FixtureSet.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.Form_SetRobot.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.LastQueue.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.LoginForm.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.MainForm.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.PointSetting.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.Properties.Resources.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.SetEpsonIO.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.SetIO.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.SystemSetting.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.UserSet.resources
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.GenerateResource.Cache
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.exe
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.pdb
+E:\Project\2010\AutoMationTest_Form\RobotMainForm\obj\x86\Debug\RobotMainForm.手柄遙控示意圖.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.exe
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.exe
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Automation.BDaq4.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.pdb
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixPriority.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixtureControl.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.FixtureSet.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.手柄遙控示意圖.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Form_SetRobot.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LastQueue.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LoginForm.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.MainForm.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.PointSetting.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Properties.Resources.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SetEpsonIO.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.SetIO.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SystemSetting.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.UserSet.resources
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.GenerateResource.Cache
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Emgu.CV.World.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvLib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NET.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NETSupportLibrary.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\VI_Lib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\zxing.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvExLib.dll
+E:\Project\2010\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csprojResolveAssemblyReference.cache
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.exe
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.pdb
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.exe
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.pdb
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Automation.BDaq4.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Emgu.CV.World.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvLib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NET.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NETSupportLibrary.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\VI_Lib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\zxing.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvExLib.dll
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.pdb
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixPriority.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixtureControl.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.FixtureSet.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.手柄遙控示意圖.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Form_SetRobot.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LastQueue.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LoginForm.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.MainForm.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.PointSetting.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Properties.Resources.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SetEpsonIO.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.SetIO.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SystemSetting.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.UserSet.resources
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.GenerateResource.Cache
+E:\V1 支援\V1 automation\new\11-27\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csprojResolveAssemblyReference.cache
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.exe
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\RobotMainForm.pdb
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Automation.BDaq4.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\Emgu.CV.World.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvLib.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NET.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\PylonC.NETSupportLibrary.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\VI_Lib.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\zxing.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\EmgucvExLib.dll
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\bin\Debug\AutoMationTest.pdb
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csprojAssemblyReference.cache
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixPriority.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.FixtureControl.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.FixtureSet.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.手柄遙控示意圖.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Form_SetRobot.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LastQueue.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.LoginForm.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.MainForm.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.PointSetting.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.Properties.Resources.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SetEpsonIO.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\AutoMationTest.UI.SetIO.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.SystemSetting.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.UserSet.resources
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.GenerateResource.cache
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.CoreCompileInputs.cache
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.csproj.CopyComplete
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.exe
+E:\Alan\Source\Libier\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_V1.2.6\AutoMationTest_Form_AutoAlignment_new\RobotMainForm\obj\x86\Debug\RobotMainForm.pdb

@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{94515685-66EE-4A11-9E3B-2796A32647CE}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RobotMainForm</RootNamespace>
+    <AssemblyName>RobotMainForm</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>37.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Microsoft.VisualBasic.PowerPacks.Vs, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="MySql.Data, Version=5.2.3.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FixPriority.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FixPriority.Designer.cs">
+      <DependentUpon>FixPriority.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FixtureControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FixtureControl.Designer.cs">
+      <DependentUpon>FixtureControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FixtureSet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FixtureSet.Designer.cs">
+      <DependentUpon>FixtureSet.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form_jogwheelinfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_jogwheelinfo.Designer.cs">
+      <DependentUpon>Form_jogwheelinfo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form_SetRobot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_SetRobot.Designer.cs">
+      <DependentUpon>Form_SetRobot.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LastQueue.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LastQueue.Designer.cs">
+      <DependentUpon>LastQueue.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PointSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PointSetting.Designer.cs">
+      <DependentUpon>PointSetting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoteControl.cs" />
+    <Compile Include="SetEpsonIO.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SetEpsonIO.Designer.cs">
+      <DependentUpon>SetEpsonIO.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SetIO.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SetIO.Designer.cs">
+      <DependentUpon>SetIO.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SystemSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SystemSetting.Designer.cs">
+      <DependentUpon>SystemSetting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserSet.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserSet.Designer.cs">
+      <DependentUpon>UserSet.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="FixPriority.resx">
+      <DependentUpon>FixPriority.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FixtureControl.resx">
+      <DependentUpon>FixtureControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FixtureSet.resx">
+      <DependentUpon>FixtureSet.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_jogwheelinfo.resx">
+      <DependentUpon>Form_jogwheelinfo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_SetRobot.resx">
+      <DependentUpon>Form_SetRobot.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LastQueue.resx">
+      <DependentUpon>LastQueue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PointSetting.resx">
+      <DependentUpon>PointSetting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="SetEpsonIO.resx">
+      <DependentUpon>SetEpsonIO.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SetIO.resx">
+      <DependentUpon>SetIO.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SystemSetting.resx">
+      <DependentUpon>SystemSetting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserSet.resx">
+      <DependentUpon>UserSet.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LogOut.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="37.ico" />
+    <Content Include="PerfCenterCpl.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 Client Profile %28x86 和 x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AutoMationTest\AutoMationTest.csproj">
+      <Project>{7B19BE35-5C61-4CD0-AC12-D1861635698E}</Project>
+      <Name>AutoMationTest</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
