@@ -1,44 +1,34 @@
-"""Sequences: a robot/ATS procedure described as data (JSON) instead of code.
+"""Sequence: một quy trình robot/ATS mô tả bằng dữ liệu (danh sách bước) thay vì bằng code.
 
-Example (config/sequences.json):
+Luồng tray dựng các stage của nó thành các danh sách bước như vậy (rcs2/core/tasks.py) và chạy chúng bằng SequenceRunner.
+config/sequences.json chứa các điểm đã dạy:
 
-    {
-      "points": {"above_input": [300, 0, 250, 180, 0, 0], "above_fixture_1": [100, 300, 250, 180, 0, 0]},
-      "sequences": {
-        "load": [
-          {"robot": "move", "pose": "above_input"},
-          {"robot": "get",  "station": 0},
-          {"robot": "move", "pose": "above_fixture_{fixture}"},
-          {"robot": "put",  "station": "{robot_station}"}
-        ],
-        "unload_pass": [ ... ]
-      }
-    }
+    {"points": {"input_O": {"xyzwpr": [100, 200, 50, 180, 0, 0], "config": [...], "uf": 1, "ut": 1}, ...}}
 
-Step types
-  {"robot": "move|rmove|gosafetarge", "pose": "<point name>" | "target": [x,y,z,w,p,r], "override": 10}
+Các loại bước
+  {"robot": "move|rmove|gosafetarge", "pose": "<tên điểm>" | "target": [x,y,z,w,p,r], "override": 10}
   {"robot": "put|get|up|down", "station": 1}
   {"robot": "gosafehere"}
   {"ats": "place_dut_ok|fixture_open|fixture_close|dut_out|request_barcode"}   (ats: "barcode", "sn": "...")
-                     an ats step acts on the fixture of the job ({fixture}); {"ats": ..., "fixture": 3} names the fixture itself
-                     (the tray flow runs steps that are not tied to one fixture)
-  The robot has ONE End Effector; a step addresses one of its tools with  {"ee": "<tool>", ...}  (tools are declared in
-  settings.json -> "end_effector", see rcs2/devices/end_effector.py):
-  {"ee": "scanner"}   read a barcode with the scanner of the End Effector; optional
-                     "length", "pattern" (regex), "retry", "timeout_s" override the reader's defaults.
-                     The code becomes the variable {sn} for the next steps and is shown on the fixture card.
-                     Put it BEFORE the robot picks the DUT:  move above_input, scanner, get, ...
-                     When the code cannot be read after all retries the job fails (alarm 9202, nothing was picked).
-                     To pass the code to the ATS:  {"ats": "barcode", "sn": "{sn}"}
-                     An optional "tag" (text) is handed back to the caller with the code: on_scan(code, "scanner", tag).
-  {"ee": "heads", "vacuum": "on|off", "heads": "all" | [1,2,3]}        suction valves of the heads
-  {"ee": "heads", "cylinder": "down|up", "heads": "all" | [1,2,3]}     head cylinders (waits for the sensors / settle time)
-  {"ee": "heads", "check": "hold|release", "heads": ..., "timeout_s": 1.0}   pressure sensors: which heads hold the DUT
-                     (a head that fails -> job fails, alarm 9203)
-  {"ee": "laser", "check": "ok", "timeout_s": 1.0}   IL-1000 laser judgement must be GO (otherwise alarm 9204)
+                     bước ats tác động lên fixture của job ({fixture}); {"ats": ..., "fixture": 3} tự ghi rõ fixture
+                     (luồng tray chạy các bước không gắn với một fixture)
+  Robot có MỘT End Effector; một bước gọi một tool của nó bằng  {"ee": "<tool>", ...}  (các tool được khai báo trong
+  settings.json -> "end_effector", xem rcs2/devices/end_effector.py):
+  {"ee": "scanner"}   đọc mã vạch bằng đầu đọc của End Effector; tùy chọn
+                     "length", "pattern" (regex), "retry", "timeout_s" đè giá trị mặc định của đầu đọc.
+                     Mã đọc được thành biến {sn} cho các bước sau và hiện trên thẻ fixture.
+                     Đặt bước này TRƯỚC khi robot hút DUT:  move tới ô, scanner, rồi hút, ...
+                     Khi không đọc được mã sau mọi lần thử lại, job thất bại (alarm 9202, chưa hút gì).
+                     Để gửi mã cho ATS:  {"ats": "barcode", "sn": "{sn}"}
+                     "tag" (văn bản, tùy chọn) được trả lại cho bên gọi cùng với mã: on_scan(code, "scanner", tag).
+  {"ee": "heads", "vacuum": "on|off", "heads": "all" | [1,2,3]}        van hút của các tay
+  {"ee": "heads", "cylinder": "down|up", "heads": "all" | [1,2,3]}     xy lanh của các tay (chờ cảm biến / thời gian ổn định)
+  {"ee": "heads", "check": "hold|release", "heads": ..., "timeout_s": 1.0}   cảm biến áp suất: tay nào đang giữ DUT
+                     (một tay lỗi -> job thất bại, alarm 9203)
+  {"ee": "laser", "check": "ok", "timeout_s": 1.0}   judgement của laser IL-1000 phải là GO (nếu không thì alarm 9204)
   {"wait": 0.5}                {"log": "message"}
-Strings may contain {fixture}, {robot_station}, {station}, {result} (and {sn} after a scanner step); they are
-expanded when the step runs.
+Chuỗi có thể chứa {fixture}, {robot_station}, {station}, {result} (và {sn} sau một bước scanner); chúng
+được thay giá trị khi bước chạy.
 """
 import json
 import os
@@ -64,7 +54,7 @@ class JobCancelled(Exception):
 
 
 def expand(value, variables):
-    """Replace {name} in strings (recursively in lists/dicts). Unknown names raise SequenceError."""
+    """Thay {name} trong chuỗi (đệ quy vào list/dict). Tên không biết thì ném SequenceError."""
     if isinstance(value, str):
         def sub(m):
             if m.group(1) not in variables:
@@ -82,19 +72,18 @@ def load_sequences(path):
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
     data.setdefault("points", {})
-    data.setdefault("sequences", {})
     return data
 
 
-# ---- writing the file: readable layout (one point / one step per line) -------------------------------- #
+# ---- ghi file: bố cục dễ đọc (mỗi điểm / mỗi bước một dòng) -------------------------------------------- #
 def dump_sequences(data, width=120):
-    """JSON text of the sequences file. Coordinates stay on ONE line:
+    """Văn bản JSON của file sequences. Tọa độ nằm trên MỘT dòng:
 
         "points": {
           "above_input": [300, -200, 250, 180, 0, 0],
           "above_fixture_1": {"xyzwpr": [679.025, 25.199, 788.931, 88.284, -15.223, 140.437], "config": [...], "uf": 0, "ut": 1}
         }
-    and every step of a sequence is one line. Same data as json.dump, only the layout differs."""
+    và mỗi bước của một sequence là một dòng. Cùng dữ liệu như json.dump, chỉ khác bố cục."""
     def fmt(value, depth, indent):
         compact = json.dumps(value, ensure_ascii=False)
         if not isinstance(value, (dict, list)) or not value:
@@ -114,7 +103,7 @@ def dump_sequences(data, width=120):
 
 
 def save_sequences(path, data):
-    """Atomic write (temp file + replace) in the readable layout of dump_sequences()."""
+    """Ghi nguyên tử (file tạm + thay thế) theo bố cục dễ đọc của dump_sequences()."""
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(dump_sequences(data))
@@ -123,7 +112,7 @@ def save_sequences(path, data):
 
 _HEAD_ACTIONS = {"vacuum": ("on", "off"), "cylinder": ("down", "up"), "check": ("hold", "release")}
 EE_TOOLS = ("heads", "scanner", "laser")
-_LEGACY_KEYS = {"hand": '{"ee": "heads", ...}', "scan": '{"ee": "scanner", ...}'}      # steps of NewRCS before End Effector
+_LEGACY_KEYS = {"hand": '{"ee": "heads", ...}', "scan": '{"ee": "scanner", ...}'}      # các bước của NewRCS trước khi có End Effector
 
 
 def _check_timeout(step, where, low, high):
@@ -134,7 +123,7 @@ def _check_timeout(step, where, low, high):
 
 
 def _check_ee_step(step, where, ee):
-    """`ee` = capabilities of the End Effector ({"heads": n, "scanner": bool, "laser": bool}) or None (not checked)."""
+    """`ee` = khả năng của End Effector ({"heads": n, "scanner": bool, "laser": bool}) hoặc None (không kiểm tra)."""
     tool = step["ee"]
     if tool not in EE_TOOLS:
         raise SequenceError("%s: unknown End Effector tool %r (use %s)" % (where, tool, ", ".join(EE_TOOLS)))
@@ -182,9 +171,9 @@ def _check_pose_value(name, value):
 
 
 def validate(sequences, points, ee=None):
-    """Static checks (run at start-up): fail early with a clear message.
-    `ee`: what the End Effector carries, {"heads": number of heads, "scanner": bool, "laser": bool}
-    (EndEffector.capabilities(); None = do not check which tools exist)."""
+    """Kiểm tra tĩnh (chạy lúc khởi động): báo lỗi sớm với thông báo rõ ràng.
+    `ee`: End Effector mang những gì, {"heads": số tay hút, "scanner": bool, "laser": bool}
+    (EndEffector.capabilities(); None = không kiểm tra tool nào có)."""
     for name, value in points.items():
         _check_pose_value(name, value)
     for sname, steps in sequences.items():
@@ -233,23 +222,23 @@ def validate(sequences, points, ee=None):
 
 
 class SequenceRunner:
-    """Runs one sequence with a robot client and the ATS clients (blocking)."""
+    """Chạy một sequence với một robot client và các ATS client (blocking)."""
 
     def __init__(self, robot, ats, points, default_override=None, sleep=time.sleep, log=None, ee=None):
-        self.robot = robot                  # BridgeClient-like
-        self.ats = ats                      # {fixture_no: AtsClient-like}
-        self.ee = ee                        # EndEffector-like (heads / scanner / laser) or None
+        self.robot = robot                  # giống BridgeClient
+        self.ats = ats                      # {số fixture: đối tượng giống AtsClient}
+        self.ee = ee                        # giống EndEffector (tay hút / đầu đọc mã / laser) hoặc None
         self.points = points
         self.default_override = default_override
         self.sleep = sleep
         self.log = log or (lambda msg: None)
 
     def run(self, name, steps, variables, cancel=None, on_scan=None):
-        """`on_scan(code, tool_name)` is called after every successful scanner step."""
+        """`on_scan(code, tool_name)` được gọi sau mỗi bước scanner thành công."""
         for i, raw in enumerate(steps, 1):
             if cancel is not None and cancel.is_set():
                 raise JobCancelled("%s cancelled before step %d" % (name, i))
-            if raw.get("ee") == "scanner" and "pattern" in raw:     # a regex such as [A-Z0-9]{14} is not a {variable}
+            if raw.get("ee") == "scanner" and "pattern" in raw:     # một regex như [A-Z0-9]{14} không phải là {biến}
                 step = expand({k: v for k, v in raw.items() if k != "pattern"}, variables)
                 step["pattern"] = raw["pattern"]
             else:
@@ -262,7 +251,7 @@ class SequenceRunner:
             except JobCancelled:
                 raise
 
-    # ---- single step ---------------------------------------------------- #
+    # ---- một bước ------------------------------------------------------- #
     def _pose(self, step):
         if "pose" in step:
             if step["pose"] not in self.points:
@@ -278,7 +267,7 @@ class SequenceRunner:
         return step.get("override", self.default_override)
 
     def _do_ee(self, step, variables, cancel, on_scan):
-        """One step on a tool of the End Effector (heads / scanner / laser)."""
+        """Một bước trên một tool của End Effector (tay hút / đầu đọc mã / laser)."""
         kind = step["ee"]
         tool = self.ee.tool(kind) if self.ee is not None and kind in EE_TOOLS else None
         if tool is None:

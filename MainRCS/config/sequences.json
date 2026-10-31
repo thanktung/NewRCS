@@ -1,6 +1,6 @@
 {
   "example": true,
-  "_note": "PLACEHOLDER coordinates. Teach the real points, then delete the line  \"example\": true  (NewRCS refuses to Start on a real robot while it is there). Tray flow (settings.json -> flow.mode = tray): head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y and fixture_N below are SAMPLE values for the simulator - teach them with Manual -> Hiệu chuẩn luồng tray. The classic sequences are kept for flow.mode = classic.",
+  "_note": "PLACEHOLDER coordinates. Teach the real points, then delete the line  \"example\": true  (NewRCS refuses to Start on a real robot while it is there). head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y and fixture_N below are SAMPLE values for the simulator - teach them with Manual -> Hiệu chuẩn luồng tray.",
   "points": {
     "above_input": {"xyzwpr": [1156.51, -266.062, 507.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
     "above_fixture_1": {"xyzwpr": [1156.51, -266.062, 492.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
@@ -89,25 +89,5 @@
     "output2_O": {"xyzwpr": [400.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
     "output2_X": {"xyzwpr": [484.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
     "output2_Y": {"xyzwpr": [400.0, 386.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1}
-  },
-  "sequences": {
-    "load": [
-      {"robot": "move", "pose": "above_input"},
-      {"robot": "get", "station": 0},
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "put", "station": "{robot_station}"}
-    ],
-    "unload_pass": [
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "get", "station": "{robot_station}"},
-      {"robot": "move", "pose": "above_input"},
-      {"robot": "put", "station": 8}
-    ],
-    "unload_ng": [
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "get", "station": "{robot_station}"},
-      {"robot": "move", "pose": "above_input"},
-      {"robot": "put", "station": 9}
-    ]
   }
 }

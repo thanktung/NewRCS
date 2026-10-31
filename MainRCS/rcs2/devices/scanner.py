@@ -1,23 +1,23 @@
-"""Keyence barcode readers (SR-710, SR-X100 ...): read a code on command.
+"""Đầu đọc mã vạch Keyence (SR-710, SR-X100 ...): đọc một mã khi được lệnh.
 
-Protocol (Keyence SR series, same as the old C# program):
-    NewRCS -> reader   "LON" + terminator     start reading
-    reader -> NewRCS   "<decoded data>" CR    the code (reading stops by itself after a good read)
-                     "ERROR"                 no-read string (default of the reader, configurable)
-                     "ER,LON,xx"             the reader refused the command
-    NewRCS -> reader   "LOFF" + terminator    stop reading (sent after a time-out or by the operator)
+Giao thức (dòng Keyence SR, giống chương trình C# cũ):
+    NewRCS -> đầu đọc  "LON" + ký tự kết thúc     bắt đầu đọc
+    đầu đọc -> NewRCS  "<dữ liệu đã giải mã>" CR  mã đọc được (đọc tốt thì đầu đọc tự dừng)
+                     "ERROR"                 chuỗi không đọc được (mặc định của đầu đọc, cấu hình được)
+                     "ER,LON,xx"             đầu đọc từ chối lệnh
+    NewRCS -> đầu đọc  "LOFF" + ký tự kết thúc    dừng đọc (gửi sau khi hết giờ hoặc khi người vận hành bấm)
 
-The reader is the scanner tool of the robot's End Effector (rcs2/devices/end_effector.py).
-Connection: TCP/IP (Ethernet) or a COM port (RS-232, needs the `pyserial` package), chosen in
-settings.json -> "end_effector" -> "scanner". A serial "port" may also be a pyserial URL (socket://host:port, rfc2217://...) for
-RS-232 readers behind a serial-to-Ethernet adapter. Everything blocks, so call it from a worker thread (the robot job thread does).
+Đầu đọc là tool scanner trên End Effector của robot (rcs2/devices/end_effector.py).
+Kết nối: TCP/IP (Ethernet) hoặc cổng COM (RS-232, cần gói `pyserial`), chọn trong
+settings.json -> "end_effector" -> "scanner". "port" dạng serial cũng có thể là URL của pyserial (socket://host:port, rfc2217://...) cho
+đầu đọc RS-232 đặt sau bộ chuyển serial-Ethernet. Mọi thứ đều blocking, nên gọi từ một worker thread (thread job robot làm vậy).
 
     "scanner": {"type": "tcp", "host": "192.168.1.50", "port": 9004,
                 "length": 14, "pattern": "[A-Z0-9]+", "retry": 2, "timeout_s": 3.0}
-    or        {"type": "serial", "port": "COM3", "baud": 9600}
-Optional keys: model (text), terminator (what is appended to LON/LOFF, default "\\r\\n" like the old program),
-no_read (default "ERROR"), connect_timeout_s.
-`length` 0 / `pattern` "" = no check. `retry` = EXTRA attempts after the first one.
+    hoặc      {"type": "serial", "port": "COM3", "baud": 9600}
+Khóa tùy chọn: model (văn bản), terminator (thêm vào sau LON/LOFF, mặc định "\\r\\n" như chương trình cũ),
+no_read (mặc định "ERROR"), connect_timeout_s.
+`length` 0 / `pattern` "" = không kiểm tra. `retry` = số lần thử THÊM sau lần đầu.
 """
 import logging
 import re
@@ -32,19 +32,19 @@ LOFF = "LOFF"
 
 
 class ScanError(Exception):
-    """A scan failed for good (after all retries)."""
+    """Đọc mã thất bại hẳn (sau mọi lần thử lại)."""
 
 
 class ScanCancelled(ScanError):
-    """The caller asked to stop (run stopped) while the reader was working."""
+    """Bên gọi yêu cầu dừng (đã dừng chạy) khi đầu đọc đang làm việc."""
 
 
 class _NoRead(Exception):
-    """One attempt gave no usable code (internal; counted as a failed attempt)."""
+    """Một lần thử không ra mã dùng được (nội bộ; tính là một lần thử thất bại)."""
 
 
 # --------------------------------------------------------------------------- #
-# transports: open / close / write / read whatever arrives within a time / drop pending input
+# cách truyền: mở / đóng / ghi / đọc những gì tới trong một khoảng thời gian / bỏ dữ liệu vào còn tồn
 # --------------------------------------------------------------------------- #
 class TcpTransport:
     def __init__(self, host, port, connect_timeout_s=3.0):
@@ -96,7 +96,7 @@ class TcpTransport:
 
 
 class SerialTransport:
-    """RS-232 through pyserial (imported only when a serial reader is really used)."""
+    """RS-232 qua pyserial (chỉ import khi thật sự dùng đầu đọc serial)."""
 
     def __init__(self, port, baud=9600, factory=None):
         self.port, self.baud = port, int(baud)
@@ -117,7 +117,7 @@ class SerialTransport:
                 import serial
             except ImportError:
                 raise ScanError("cổng COM cần thư viện pyserial (pip install pyserial)")
-            # "COM3" -> normal port; "socket://host:port" / "rfc2217://..." (RS-232 over Ethernet adapters) -> URL handler
+            # "COM3" -> cổng thường; "socket://host:port" / "rfc2217://..." (RS-232 qua bộ chuyển Ethernet) -> xử lý dạng URL
             factory = serial.serial_for_url if "://" in self.port else serial.Serial
         self._ser = factory(self.port, self.baud, timeout=0.05, write_timeout=2.0)
 
@@ -148,7 +148,7 @@ class SerialTransport:
 
 
 # --------------------------------------------------------------------------- #
-# reader
+# đầu đọc
 # --------------------------------------------------------------------------- #
 class KeyenceScanner:
     def __init__(self, name, transport, length=0, pattern="", retry=2, timeout_s=3.0, terminator="\r\n",
@@ -160,11 +160,11 @@ class KeyenceScanner:
         self.terminator = terminator.encode("ascii")
         self.no_read = no_read.strip().upper()
         self.model = model
-        self._lock = threading.Lock()          # one reading at a time
-        self._wlock = threading.Lock()         # writes (LON from the job thread, LOFF from the operator button)
+        self._lock = threading.Lock()          # mỗi lần chỉ một lượt đọc
+        self._wlock = threading.Lock()         # các lần ghi (LON từ thread job, LOFF từ nút của người vận hành)
         self._buf = b""
 
-    # ---- construction from settings --------------------------------------------- #
+    # ---- dựng từ cài đặt ----------------------------------------------------------- #
     @classmethod
     def from_config(cls, name, cfg, serial_factory=None):
         kind = str(cfg.get("type", "tcp")).lower()
@@ -184,7 +184,7 @@ class KeyenceScanner:
     def describe(self):
         return "%s (%s%s)" % (self.name, self.transport.describe(), ", " + self.model if self.model else "")
 
-    # ---- connection ----------------------------------------------------------------- #
+    # ---- kết nối -------------------------------------------------------------------- #
     def close(self):
         with self._lock:
             self.transport.close()
@@ -208,7 +208,7 @@ class KeyenceScanner:
         with self._wlock:
             self.transport.write(command.encode("ascii") + self.terminator)
 
-    # ---- one attempt ------------------------------------------------------------------ #
+    # ---- một lần thử ---------------------------------------------------------------- #
     def _next_line(self):
         for i, ch in enumerate(self._buf):
             if ch in (10, 13):
@@ -250,7 +250,7 @@ class KeyenceScanner:
             pass
 
     def check(self, code, length=None, pattern=None):
-        """Raises _NoRead when `code` does not satisfy the length / pattern."""
+        """Ném _NoRead khi `code` không đạt độ dài / mẫu."""
         length = self.length if length is None else int(length)
         if length and len(code) != length:
             raise _NoRead("mã '%s' dài %d ký tự, cần %d" % (code, len(code), length))
@@ -258,9 +258,9 @@ class KeyenceScanner:
         if regex is not None and not regex.fullmatch(code):
             raise _NoRead("mã '%s' không đúng mẫu %s" % (code, regex.pattern))
 
-    # ---- public API --------------------------------------------------------------------- #
+    # ---- API công khai ------------------------------------------------------------------ #
     def scan(self, length=None, pattern=None, retry=None, timeout_s=None, should_stop=None, blocking=True):
-        """Read one code (LON ... result), validate it, retry on failure. Returns the code or raises ScanError."""
+        """Đọc một mã (LON ... kết quả), kiểm tra, thử lại khi lỗi. Trả về mã hoặc ném ScanError."""
         if not self._lock.acquire(blocking):
             raise ScanError("máy quét %s đang bận" % self.name)
         try:
@@ -275,7 +275,7 @@ class KeyenceScanner:
                         self._ensure_open()
                     except ScanCancelled:
                         raise
-                    except ScanError as ex:                      # cannot connect: a failed attempt like any other
+                    except ScanError as ex:                      # không kết nối được: tính là một lần thử thất bại như mọi lần khác
                         raise _NoRead(str(ex).replace("máy quét %s: " % self.name, ""))
                     code = self._attempt(timeout_s, should_stop)
                     self.check(code, length, pattern)
@@ -284,7 +284,7 @@ class KeyenceScanner:
                 except _NoRead as ex:
                     reasons.append(str(ex))
                     log.warning("scanner %s attempt %d/%d: %s", self.name, attempt + 1, retry + 1, ex)
-                except (OSError, ConnectionError) as ex:         # link lost: reconnect on the next attempt
+                except (OSError, ConnectionError) as ex:         # mất kết nối: kết nối lại ở lần thử sau
                     reasons.append("mất kết nối (%s)" % ex)
                     self._drop()
             raise ScanError("máy quét %s: không đọc được mã sau %d lần thử - %s"
@@ -293,9 +293,9 @@ class KeyenceScanner:
             self._lock.release()
 
     def stop(self):
-        """LOFF: stop a reading in progress (operator button). Safe to call at any time, also during a scan."""
+        """LOFF: dừng một lượt đọc đang diễn ra (nút của người vận hành). Gọi lúc nào cũng an toàn, kể cả khi đang quét."""
         if not self.transport.is_open:
-            return                                               # not connected: nothing is being read
+            return                                               # chưa kết nối: không có gì đang được đọc
         try:
             self._send(LOFF)
         except (OSError, ConnectionError) as ex:

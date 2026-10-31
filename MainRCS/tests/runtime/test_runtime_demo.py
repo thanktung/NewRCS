@@ -1,14 +1,20 @@
 """Integration: Runtime + engine + real TCP clients + simulated bridge + mock ATS programs."""
-import copy
 import os
 import tempfile
 import time
 import unittest
 
-from rcs2.config import DEFAULTS
 from rcs2.core import engine as E
-from rcs2.tools.demo import DEMO_POINTS, DEMO_SEQUENCES, start_demo
+from rcs2.tools.demo import sample_flow_points, start_demo
+from tests.support.engine import tray_settings
 from rcs2.runtime import Runtime
+
+
+def demo_base():
+    """tray_settings() with enough products in the input tray for a few cycles."""
+    base = tray_settings()
+    base["trays"]["input"] = {"rows": 2, "cols": 4}
+    return base
 
 
 def wait_until(cond, timeout=20.0, what="condition"):
@@ -23,10 +29,10 @@ def wait_until(cond, timeout=20.0, what="condition"):
 class RuntimeDemoTest(unittest.TestCase):
     def test_end_to_end_cycles(self):
         tmp = tempfile.mkdtemp()
-        base = copy.deepcopy(DEFAULTS)
+        base = demo_base()
         base["outbox_path"] = os.path.join(tmp, "outbox.sqlite")
         cfg, stop_demo = start_demo(base, fixtures=2, speed=0.02, test_time=(0.2, 0.1))
-        rt = Runtime(cfg, tmp, {"points": DEMO_POINTS, "sequences": DEMO_SEQUENCES, "example": True})
+        rt = Runtime(cfg, tmp, {"points": sample_flow_points(cfg), "example": True})
         rt.start()
         try:
             wait_until(lambda: rt.engine.snapshot()["robot"].get("connected"), what="robot link")
@@ -36,12 +42,12 @@ class RuntimeDemoTest(unittest.TestCase):
                 rt.engine.set_enabled(n, True)
             time.sleep(0.3)
             rt.engine.start_run()
-            wait_until(lambda: rt.engine.snapshot()["totals"]["total"] >= 6, what="6 finished tests")
+            wait_until(lambda: rt.engine.snapshot()["totals"]["total"] >= 4, what="4 finished tests")
             snap = rt.engine.snapshot()
             self.assertNotEqual(snap["run_state"], E.RUN_FAULT, snap["fault_text"])
             self.assertTrue(snap["robot"]["armed"])
             results = [p["result"] for _, k, p in rt.outbox.pending(1000) if k == "result"]
-            self.assertGreaterEqual(len(results), 6)
+            self.assertGreaterEqual(len(results), 4)
             self.assertTrue(set(results) <= {"PASS", "NG"})
             rt.engine.stop_run()
             wait_until(lambda: not rt.engine.snapshot()["robot"].get("armed"), what="disarm")
@@ -51,10 +57,10 @@ class RuntimeDemoTest(unittest.TestCase):
 
     def test_login_is_stored(self):
         tmp = tempfile.mkdtemp()
-        base = copy.deepcopy(DEFAULTS)
+        base = demo_base()
         base["outbox_path"] = os.path.join(tmp, "outbox.sqlite")
         cfg, stop_demo = start_demo(base, fixtures=1, speed=0.02, test_time=(0.2, 0.1))
-        rt = Runtime(cfg, tmp, {"points": DEMO_POINTS, "sequences": DEMO_SEQUENCES})
+        rt = Runtime(cfg, tmp, {"points": sample_flow_points(cfg)})
         try:
             result = rt.login("12345678", "wnc000000")
             self.assertEqual(result.employee.name, "Demo User")
@@ -66,10 +72,10 @@ class RuntimeDemoTest(unittest.TestCase):
 
     def test_example_sequences_block_start_on_a_real_robot(self):
         tmp = tempfile.mkdtemp()
-        base = copy.deepcopy(DEFAULTS)
+        base = demo_base()
         base["outbox_path"] = os.path.join(tmp, "outbox.sqlite")
         cfg, stop_demo = start_demo(base, fixtures=1, speed=0.02, test_time=(0.2, 0.1))
-        rt = Runtime(cfg, tmp, {"points": DEMO_POINTS, "sequences": DEMO_SEQUENCES, "example": True})
+        rt = Runtime(cfg, tmp, {"points": sample_flow_points(cfg), "example": True})
         try:
             rt._check_sequences_vs_mode({"mode": "real"})
             self.assertIn("VÍ DỤ", rt.engine.block_reason)

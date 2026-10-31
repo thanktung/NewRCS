@@ -1,5 +1,4 @@
 """Automatic logout (default: 3 minutes after the login) and the tray sizes saved by the runtime."""
-import copy
 import os
 import tempfile
 import unittest
@@ -8,7 +7,7 @@ from rcs2.config import DEFAULTS
 from rcs2.core.sequence import save_sequences
 from rcs2.runtime import Runtime
 
-from tests.support.engine import SEQ
+from tests.support.engine import tray_settings
 
 
 class Emp:
@@ -37,7 +36,7 @@ class RuntimeCase(unittest.TestCase):
     overrides = None
 
     def make_runtime(self, top=None, name="outbox.sqlite"):
-        cfg = copy.deepcopy(DEFAULTS)
+        cfg = tray_settings()
         cfg["outbox_path"] = name
         cfg["engine"]["sequences_path"] = "sequences.json"
         cfg.update(top or {})
@@ -47,7 +46,7 @@ class RuntimeCase(unittest.TestCase):
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": {}, "sequences": SEQ})
+        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": {}})
         self.rt = self.make_runtime()
         self.rt.employee = FakeEmployee()
         self.rt.clock = Clock()
@@ -124,9 +123,6 @@ class DisabledLogoutTests(RuntimeCase):
 
 class TraySizeTests(RuntimeCase):
     overrides = {"employee": {}}
-
-    def test_not_declared_means_no_trays(self):
-        self.assertEqual(self.rt.engine.snapshot()["trays"], {})
 
     def test_sizes_come_from_the_settings(self):
         again = self.make_runtime({"trays": {"_note": "x", "input": {"rows": 5, "cols": 8}, "ng": {"rows": 3, "cols": 4}}})

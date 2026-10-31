@@ -73,7 +73,7 @@ class Runtime(SessionMixin, BridgeLinkMixin, RobotOpsMixin, EndEffectorOpsMixin,
         # the ONE End Effector of the robot: suction heads (robot I/O), barcode scanner, IL-1000 laser
         self.ee = build_end_effector(settings, self.bridge)
         self.engine = Engine(settings, self.bridge, self.ats, self.sink, self.errors,
-                             self._seq_data["sequences"], self._seq_data["points"], ee=self.ee,
+                             self._seq_data["points"], ee=self.ee,
                              trays=settings.get("trays"))   # sizes come only from settings.json
         self.engine.on_log = self._emit_log
         self.engine.on_drop = self._on_drop                 # tray flow: a head dropped its product -> stop the robot program

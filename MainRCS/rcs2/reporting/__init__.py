@@ -1,1 +1,1 @@
-"""Reporting: local outbox + upload to the legacy MySQL dashboard tables (see reporting/README.md)."""
+"""Báo cáo: outbox cục bộ + upload lên các bảng MySQL cũ của dashboard (xem reporting/README.md)."""

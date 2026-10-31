@@ -18,7 +18,6 @@ rt = P.FakeRuntime()
 rt.engine.snap = P.snap_running()
 rt.engine.snap["run_state"] = E.STOPPED
 rt.engine.snap["current_job"] = None
-rt.engine.snap["queue"] = []
 manual_calls = []
 rt.manual_rmove = lambda off, speed: manual_calls.append((off, speed)) or {"ok": 1}
 

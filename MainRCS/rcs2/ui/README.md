@@ -20,7 +20,7 @@ ui/
 │   └─ __init__.py          re-export: windows chỉ cần `from ..widgets import FixtureCard, ...`
 └─ windows/
     ├─ main_window.py       MainWindow: thanh lệnh, thẻ fixture, tab Tray hàng / Nhật ký, panel Robot + Alarm, vòng refresh()
-    ├─ manual_dialog.py     ManualDialog: jog, đi tới điểm, dạy điểm, đầu hút, máy quét, laser, xóa lỗi; nút "Hiệu chuẩn luồng tray" (khi flow.mode = tray)
+    ├─ manual_dialog.py     ManualDialog: jog, đi tới điểm, dạy điểm, đầu hút, máy quét, laser, xóa lỗi; nút "Hiệu chuẩn luồng tray"
     ├─ calibration_dialog.py CalibrationDialog: dạy offset các tay, 3 điểm mỗi tray, vị trí box; tính + đưa từng tay tới ô / box để kiểm tra (6 giá trị)
     └─ login_dialog.py      LoginDialog: đăng nhập bằng mã thẻ
 ```
@@ -51,7 +51,7 @@ kết quả về qua signal, chỉ ghi vào nhật ký (không popup). Nút **Ch
 5. Kiểm tra bằng `devtools/ui_preview` (ảnh chụp + `contract_test.py`).
 
 ### Luồng tray trên giao diện
-`snapshot["flow"]` (None ở chế độ classic) mang sổ sách: `heads` (mỗi tay có `state`: `empty` / `fresh` / `pass` / `ng` / `retest`), `input_cells` (mỗi ô tray Input: `fresh` / `empty` / `pass`), `ng_used` (số ô tray NG đã có NG), `out_used` (số ô đã có hàng PASS của từng tray output), `stats`. `TrayPanel.update_from(trays, flow)` tô màu: ô input xanh dương = chưa test, xanh lá = pass, **xám = trống**; ô NG đỏ = NG, xám = trống; ô output xanh lá = pass, xám = trống; tay: xanh dương chưa test, xanh lá pass, đỏ ng, cam retest, xám trống; thẻ fixture hiện `SN · ô đã lấy ra · lần test`. Thêm trạng thái mới: `FLOW_COLOR` / `FLOW_TEXT` trong `widgets/tray_panel.py` và `HEAD_STATE` trong `core/flow.py`.
+`snapshot["flow"]` mang sổ sách: `heads` (mỗi tay có `state`: `empty` / `fresh` / `pass` / `ng` / `retest`), `input_cells` (mỗi ô tray Input: `fresh` / `empty` / `pass`), `ng_used` (số ô tray NG đã có NG), `out_used` (số ô đã có hàng PASS của từng tray output), `stats`. `TrayPanel.update_from(trays, flow)` tô màu: ô input xanh dương = chưa test, xanh lá = pass, **xám = trống**; ô NG đỏ = NG, xám = trống; ô output xanh lá = pass, xám = trống; tay: xanh dương chưa test, xanh lá pass, đỏ ng, cam retest, xám trống; thẻ fixture hiện `SN · ô đã lấy ra · lần test`. Thêm trạng thái mới: `FLOW_COLOR` / `FLOW_TEXT` trong `widgets/tray_panel.py` và `HEAD_STATE` trong `core/flow.py`.
 
 ### Thêm một nút gọi thao tác của Runtime
 1. Thêm phương thức vào `Runtime` (xem `runtime/README.md`), vì giao diện không tự nói chuyện với robot.

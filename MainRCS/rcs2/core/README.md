@@ -1,13 +1,13 @@
 # Module `rcs2/core` — logic lịch chạy của cell
 
-Đây là **bộ não**: quyết định fixture nào nạp / lấy ra khi nào, chạy sequence của robot, đếm kết quả, đếm tray, phát alarm.
+Đây là **bộ não**: quyết định robot làm việc gì tiếp theo (planner của luồng tray), chạy các stage của robot, đếm kết quả, đếm tray, phát alarm.
 Không biết gì về giao diện, giao thức TCP hay SQL (chỉ nhận các đối tượng được đưa vào: robot client, ATS client, sink, errors).
 
 ## File
 | File | Nội dung |
 |---|---|
-| `engine.py` | `Engine`: máy trạng thái của các fixture, hàng đợi job robot, lệnh vận hành, alarm, `snapshot()` cho UI |
-| `sequence.py` | Sequence = quy trình robot/ATS mô tả bằng **dữ liệu** (`config/sequences.json`): `validate`, `SequenceRunner`, đọc/ghi file |
+| `engine.py` | `Engine`: trạng thái các fixture, phát việc robot theo planner, lệnh vận hành, alarm, `snapshot()` cho UI |
+| `sequence.py` | Bước robot/ATS/End Effector mô tả bằng **dữ liệu**: `validate`, `SequenceRunner` (chạy các stage), đọc/ghi `config/sequences.json` (điểm đã dạy) |
 | `tray.py` | `Tray` / `build_trays`: tray Input (còn hàng) và NG (đã đầy), kích thước chỉ đặt trong `settings.json` → `trays` |
 | `geometry.py` `dut.py` `planner.py` `tasks.py` `flow.py` `states.py` | **luồng tray** (nhiều tay hút, nhiều box, tray 3 điểm): xem mục "Luồng tray" bên dưới |
 
@@ -17,11 +17,8 @@ Phụ thuộc cho phép: `ats` (hằng số giao thức), `devices` (`ScanCancel
 - **Một thread duy nhất** (`engine`) giữ toàn bộ trạng thái và xử lý **từng sự kiện một**: tin nhắn ATS, lệnh vận hành, job xong, tick 0,2 s.
   Mọi hàm công khai (`start_run`, `set_enabled`, `on_ats_event`...) chỉ **post** sự kiện vào hàng đợi, nên thread-safe.
 - Robot chỉ có một: **một job tại một thời điểm**, job chạy blocking trong thread riêng (`job-N`) rồi post `job_done`.
-- Vòng đời một fixture:
-  `OFFLINE/NO_USED → IDLE —WAITDUT→ (load job) LOADING → TESTING —kết quả→ RESULT → (unload job) UNLOADING → IDLE → ...`
-  DUT đã test được lấy ra **trước** khi nạp DUT mới (`_next_job` ưu tiên `unload`).
-- Kết quả → sequence lấy ra: bảng `UNLOAD_SEQUENCE` (PASS→`unload_pass`, NG/WARNING→`unload_ng`, RETEST→`unload_retest`
-  rồi `unload_ng`, FQC→`unload_fqc` rồi `unload_pass`). Ba sequence `load`, `unload_pass`, `unload_ng` là **bắt buộc**.
+- Mỗi khi robot rảnh, engine hỏi **planner** việc tiếp theo (`_dispatch`) rồi chạy các **stage** của việc đó (xem "Luồng tray").
+- Vòng đời một fixture (box): `OFFLINE/NO_USED → IDLE —WAITDUT→ LOADING → TESTING —kết quả→ RESULT → UNLOADING → ...`
 - `run_state`: `STOPPED / RUNNING / PAUSED / FAULT`. Job lỗi → `FAULT` (alarm theo loại lỗi) cho tới khi người vận hành xác nhận.
 
 ### Bảng alarm (mã giữ từ RCS cũ khi có)
@@ -48,11 +45,11 @@ Phụ thuộc cho phép: `ats` (hằng số giao thức), `devices` (`ScanCancel
 1. **Không ghi lệnh robot khi UO[3] PROGRUN = 0**: `_cmd_start` đọc mới UO[3], `_dispatch` không phát job, `_watch_program` tạm dừng sau 1 s.
 2. **Không disarm giữa chừng một sequence** (`_disarm_after_job`).
 3. Mọi trạng thái chỉ đổi trong thread engine (có `self._lock` cho `snapshot()` đọc từ thread khác).
-4. Trạng thái tray **chỉ đếm ô**, không gắn với vị trí robot, và mất khi khởi động lại (Input = đầy, NG = trống).
+4. Sổ sách luồng tray (`DutBook`) và trạng thái tray nằm trong RAM: **mất khi khởi động lại** (Input = đầy, NG = trống).
 5. `snapshot()` là **hợp đồng với UI**: thêm khóa thì thêm, đừng đổi tên / bỏ khóa mà không sửa `ui/` và `devtools/ui_preview`.
 
-## Luồng tray (`flow.mode: "tray"`): 8 tay hút, nhiều box, tray 3 điểm
-Chế độ mới cho cell có **nhiều tay hút** (End Effector) và **nhiều box**. Mặc định vẫn là `classic`. Bật bằng `settings.json` → `flow.mode`.
+## Luồng tray: 8 tay hút, nhiều box, tray 3 điểm
+Cách chạy **duy nhất** của NewRCS (chế độ "classic" mỗi fixture một sequence đã bỏ; `settings.json` còn ghi `flow.mode: "classic"` sẽ bị báo lỗi lúc khởi động). Cần **nhiều tay hút** (End Effector, tối thiểu 2) và khai báo tray Input + NG.
 
 **Quy tắc nghiệp vụ**
 - Robot lấy hàng **chưa test** từ tray Input vào từng tay hút (mỗi tay một sản phẩm), đem tới box nào **trống / test xong** để đặt vào rồi gửi `B1=<SN>` + `CtoT_placeDUTOK`.
@@ -100,7 +97,7 @@ Chế độ mới cho cell có **nhiều tay hút** (End Effector) và **nhiều
 **Giới hạn hiện tại:** sau lỗi (rơi hàng, laser, tay không hút được) người vận hành dọn tay hút / box bằng tay rồi `Xóa trạng thái luồng` (chưa tự phục hồi); simulator chưa theo dõi vị trí thật của sản phẩm (nó chỉ kiểm tra luồng lệnh, không kiểm tra tọa độ).
 
 ## Sequence (`sequence.py`)
-Cấu trúc file: `{"points": {...}, "sequences": {"load": [...], ...}}`. Mỗi bước là **đúng một** trong `robot / ats / ee / wait / log`:
+`config/sequences.json` chỉ chứa **điểm đã dạy**: `{"points": {...}}`. Các stage của luồng tray (`tasks.py`) là danh sách bước, mỗi bước là **đúng một** trong `robot / ats / ee / wait / log`:
 ```
 {"robot": "move|rmove|gosafetarge", "pose": "<điểm>" | "target": [x,y,z,w,p,r], "override": 10}
 {"robot": "put|get|up|down", "station": 1}        {"robot": "gosafehere"}
@@ -110,21 +107,20 @@ Cấu trúc file: `{"points": {...}, "sequences": {"load": [...], ...}}`. Mỗi 
 {"ee": "laser", "check": "ok"}
 {"wait": 0.5}    {"log": "..."}
 ```
-Biến trong chuỗi: `{fixture}`, `{robot_station}`, `{station}`, `{result}`, `{sn}` (sau bước scanner). Bước `ats` có thể ghi `"fixture": 3` để chỉ rõ box (luồng tray); bước scanner có `"tag"` được trả lại cùng mã (`on_scan(code, "scanner", tag)`). `validate()` chạy lúc khởi động và báo lỗi
-bước nào sai. `save_sequences()` ghi nguyên tử, mỗi điểm / bước một dòng.
+Biến trong chuỗi: `{sn}` (sau bước scanner). Bước `ats` ghi `"fixture": 3` để chỉ rõ box; bước scanner có `"tag"` được trả lại cùng mã (`on_scan(code, "scanner", tag)`). Lúc khởi động engine gọi `validate({}, points)` để báo ngay
+điểm dạy nào viết sai. `save_sequences()` ghi nguyên tử, mỗi điểm một dòng.
 
 ## Hướng dẫn sửa
 ### Đổi logic chạy
 | Muốn | Sửa ở |
 |---|---|
-| Khi nào nạp DUT mới | `Engine._maybe_queue_load`, `_next_job` |
-| Sequence nào chạy cho kết quả nào | `UNLOAD_SEQUENCE` (đầu `engine.py`) |
+| Robot làm việc gì tiếp theo | `planner.py` (xem "Hướng dẫn sửa luồng tray") |
 | Kết quả nào tính là NG liên tiếp | `COUNTS_AS_FAIL`, `_on_result` |
-| Việc gì xảy ra sau khi job xong | `_on_job_done` (đặt trạng thái, bắt đầu test, `dut_out`, nạp tiếp) |
+| Việc gì xảy ra sau khi job xong / lỗi | `_on_job_done`, `_fail_flow` |
 | Thêm lệnh vận hành (ví dụ "bỏ qua fixture") | thêm `def _cmd_<tên>(self, ...)` + hàm công khai `post("cmd", "<tên>", ...)`; `_handle` tự gọi `_cmd_<tên>` |
 | Thêm mã alarm mới | `self.errors.raise_error("9xxx", "mô tả", key="...")` + `clear_error(key)` khi hết; thêm vào bảng trên và docstring đầu `engine.py` |
 | Thêm khóa vào `snapshot()` | `Engine.snapshot` + chỗ UI đọc (`ui/windows/main_window.refresh`) + `devtools/ui_preview/preview.py` (dữ liệu giả) |
-| Thêm loại kết quả ATS | `ats/protocol.py` (xem README của `ats`), rồi `RESULT_LABEL`, `UNLOAD_SEQUENCE`, `COUNTS_AS_FAIL` |
+| Thêm loại kết quả ATS | `ats/protocol.py` (xem README của `ats`), rồi `RESULT_LABEL`, `COUNTS_AS_FAIL` |
 
 ### Thêm một loại bước sequence
 1. `validate()` (hoặc `_check_ee_step` cho bước `ee`): kiểm tra tham số, báo lỗi rõ.
@@ -133,12 +129,9 @@ bước nào sai. `save_sequences()` ghi nguyên tử, mỗi điểm / bước m
 4. Thêm thao tác tương ứng cho simulator nếu cần (`bridge32/bridge_simple.py`).
 5. Test: `tests/core/test_sequence.py`.
 
-### Thêm một sequence mới (ví dụ `unload_retest`)
-Chỉ sửa `config/sequences.json` (dữ liệu). Nếu nó là sequence của một kết quả mới thì thêm vào `UNLOAD_SEQUENCE`.
-
 ### Đổi kích thước tray
 Chỉ trong `settings.json` → `trays` (1..50 mỗi chiều, `tray.MAX_SIDE`), rồi khởi động lại.
 
 ## Test
-`python run_tests.py core` — `test_engine` (chu kỳ, alarm, timeout, dừng, tray, chương trình robot dừng), `test_sequence`, `test_tray`.
-Fixture dùng chung nằm ở `tests/support/engine.py` (`EngineCase`, `FakeRobot`, `FakeAts`, `SEQ`).
+`python run_tests.py core` — `test_engine` (bắt đầu / tạm dừng / dừng, alarm, lỗi + xác nhận, timeout, chương trình robot dừng), `test_flow_engine` (luồng tray), `test_planner`, `test_sequence`, `test_tray`.
+Fixture dùng chung nằm ở `tests/support/engine.py` (`EngineCase`, `FlowRobot`, `FakeAts`, `taught_points`, `tray_settings`).

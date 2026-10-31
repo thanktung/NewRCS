@@ -3,7 +3,6 @@ import copy
 import time
 import unittest
 
-from rcs2.ats import protocol as AP
 from rcs2.config import DEFAULTS
 from rcs2.core import dut as D
 from rcs2.core import engine as E
@@ -13,162 +12,11 @@ from rcs2.devices.heads import HeadBank
 from rcs2.reporting.data_sink import DataSink, ErrorTracker
 from rcs2.reporting.outbox import Outbox
 from tests.devices.test_end_effector import FakeIo
-from tests.support.engine import FakeAts, FakeRobot, wait_until
-
-HEADS, BOXES = 4, 4
-TRAYS = {"input": {"rows": 2, "cols": 4}, "ng": {"rows": 1, "cols": 4}}
-TRAYS_OUT = dict(TRAYS, output1={"rows": 1, "cols": 3}, output2={"rows": 1, "cols": 3})      # the passed products go to output 1, then output 2
+from tests.support.engine import (BOXES, HEADS, TRAYS, TRAYS_OUT, EngineCase, FlowRobot, pt, taught_points,  # noqa: F401
+                                  wait_until)
 
 
-def pt(x, y, z, w=180.0, p=0.0, r=0.0):
-    return {"xyzwpr": [x, y, z, w, p, r], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1}
-
-
-def taught_points():
-    pts = {"head_%d_at_O" % k: pt(500 - 22 * (k - 1), 100, 300) for k in range(1, HEADS + 1)}
-    pts["scanner_at_O"] = pt(540, 100, 300)
-    pts["laser_at_O"] = pt(560, 100, 300)                      # used only when flow.laser_check is on
-    pts.update({"input_O": pt(100, 200, 50), "input_X": pt(130, 200, 50), "input_Y": pt(100, 260, 50),
-                "ng_O": pt(300, 200, 50), "ng_X": pt(330, 200, 50), "ng_Y": pt(300, 200, 50),
-                "output1_O": pt(100, 350, 50), "output1_X": pt(120, 350, 50), "output1_Y": pt(100, 350, 50),      # (used only with output trays)
-                "output2_O": pt(300, 350, 50), "output2_X": pt(320, 350, 50), "output2_Y": pt(300, 350, 50)})
-    for n in range(1, BOXES + 1):
-        pts["fixture_%d" % n] = pt(100 * n, 500, 200)
-    return pts
-
-
-class FlowRobot(FakeRobot):
-    def __init__(self):
-        super().__init__()
-        self.moves = []
-        self.hook = None                    # callable(number of moves so far), called inside every move
-
-    def move(self, xyz, override=None, config=None, uf=None, ut=None, **kw):
-        self._op("move")
-        self.moves.append((list(xyz), override, config, uf, ut))
-        if self.hook is not None:
-            self.hook(len(self.moves))
-
-
-class FakeLaser:
-    """IL-1000 stand-in: check() records the call and the robot pose it was made at; `fail` = judgement is not GO."""
-    enabled = True
-
-    def __init__(self, robot):
-        self.robot, self.calls, self.fail = robot, [], False
-
-    def check(self, timeout_s=None):
-        self.calls.append(list(self.robot.moves[-1][0]))
-        if self.fail:
-            from rcs2.devices.laser import LaserError
-            raise LaserError("laser IL-1000 không đạt (HIGH)")
-
-
-class FlowAts(FakeAts):
-    def __init__(self):
-        super().__init__()
-        self.barcodes = []
-
-    def send_barcode(self, sn):
-        self.barcodes.append(sn)
-        self.calls.append("barcode:%s" % sn)
-        return True
-
-
-class FakeScanner:
-    def __init__(self):
-        self.n = 0
-        self.fail = False
-
-    def scan(self, **kw):
-        if self.fail:
-            from rcs2.devices.scanner import ScanError
-            raise ScanError("no read")
-        self.n += 1
-        return "SN%04d" % self.n
-
-    def close(self):
-        pass
-
-
-class FlowCase(unittest.TestCase):
-    flow = {}
-    laser = False                          # True: the End Effector carries a laser (FakeLaser)
-    trays = TRAYS                          # TRAYS_OUT: with output trays for the passed products
-
-    def setUp(self):
-        cfg = copy.deepcopy(DEFAULTS)
-        cfg["ats"]["fixtures"] = {str(i): {"host": "10.0.0.%d" % i, "port": 8888, "station": "S"} for i in range(1, BOXES + 1)}
-        cfg["flow"].update({"mode": "tray", "override": 5})
-        cfg["flow"].update(self.flow)
-        cfg["trays"] = self.trays
-        self.cfg = cfg
-        self.io = FakeIo(products=range(1, HEADS + 1))
-        bank = HeadBank.from_config({"enabled": True, "cylinder_s": 0.0, "vacuum_s": 0.0, "pressure_timeout_s": 0.3,
-                                     "cylinder_timeout_s": 0.3,
-                                     "units": [{"vacuum": "RDO[%d]" % n, "cylinder": "RDO[%d]" % (8 + n), "pressure": "RDI[%d]" % n}
-                                               for n in range(1, HEADS + 1)]}, self.io)
-        bank.sleep = lambda s: None
-        self.scanner = FakeScanner()
-        self.robot = FlowRobot()
-        self.laser_tool = FakeLaser(self.robot) if self.laser else None
-        self.ee = EndEffector(bank, self.scanner, self.laser_tool)
-        self.points = taught_points()
-        self.box = Outbox(":memory:")
-        self.sink = DataSink(self.box, None)
-        self.errors = ErrorTracker(self.sink, "Model_S")
-        self.ats = {i: FlowAts() for i in range(1, BOXES + 1)}
-        self.eng = E.Engine(cfg, self.robot, self.ats, self.sink, self.errors, {}, self.points, ee=self.ee, trays=self.trays)
-        self.eng.start()
-        for n in self.ats:
-            self.eng.on_ats_connection(n, True)
-            self.eng.set_enabled(n, True)
-        self.logs = []
-        self.eng.on_log = lambda lvl, text: self.logs.append((lvl, text))
-        self.answered = set()
-
-    def tearDown(self):
-        self.eng.shutdown()
-
-    # ---- helpers ----------------------------------------------------------------------------------- #
-    def start(self):
-        for n in self.ats:
-            self.eng.on_ats_event(n, AP.parse_message("TtoC_resultWaitdut"))
-        self.eng.start_run()
-        self.eng.wait_processed()
-
-    def flow_snap(self):
-        return self.eng.snapshot()["flow"]
-
-    def fixtures(self):
-        return {f["number"]: f for f in self.eng.snapshot()["fixtures"]}
-
-    def answer_tests(self, fate):
-        """Act as the ATS: every box that is testing gets the result `fate(cell, attempt_number)` ("PASS" / "NG") once."""
-        for n, f in self.fixtures().items():
-            if f["state"] == E.TESTING and f["dut"] is not None and (n, f["dut"], f["tests"]) not in self.answered:
-                self.answered.add((n, f["dut"], f["tests"]))
-                label = fate(f["cell"], f["tests"] + 1)
-                msg = "TtoC_resultPass" if label == "PASS" else "TtoC_resultNG+item+1"
-                self.eng.on_ats_event(n, AP.parse_message(msg))
-
-    def run_all(self, fate, timeout=25.0):
-        end = time.time() + timeout
-        while time.time() < end:
-            self.answer_tests(fate)
-            st = self.flow_snap()["stats"]
-            if self.eng.run_state != E.RUNNING:
-                break
-            if st["fresh"] == 0 and st["in_flight"] == 0:
-                return
-            time.sleep(0.02)
-        self.fail("did not finish: state %s, %s, last log %s" % (self.eng.run_state, self.flow_snap()["stats"], self.logs[-3:]))
-
-    def book(self):
-        return self.eng.flow.book
-
-
-class RunTests(FlowCase):
+class RunTests(EngineCase):
     def test_all_products_pass_and_fill_the_input_tray_from_the_first_cell(self):
         self.start()
         self.run_all(lambda cell, attempt: "PASS")
@@ -236,7 +84,7 @@ class RunTests(FlowCase):
         self.assertEqual(cells, [0, 1, 2, 3])
 
 
-class SafetyTests(FlowCase):
+class SafetyTests(EngineCase):
     def test_start_is_refused_while_taught_points_are_missing(self):
         del self.points["fixture_2"], self.points["head_3_at_O"]
         self.start()
@@ -313,7 +161,7 @@ class SafetyTests(FlowCase):
         self.assertIsNone(self.fixtures()[1]["dut"])                                # nobody was put into the disabled box
 
 
-class LaserCheckTests(FlowCase):
+class LaserCheckTests(EngineCase):
     """After a product is PUT DOWN the laser looks at 2 measuring points; a tilted product (not GO) stops the run."""
     laser = True
     flow = {"laser_check": {"enabled": True, "places": ["box", "input"], "offsets": [[-15, 0, 0], [15, 0, 0]], "timeout_s": 0.5}}
@@ -362,13 +210,13 @@ class LaserNeedsALaser(unittest.TestCase):
         from rcs2.core.flow import FlowError
         cfg = copy.deepcopy(DEFAULTS)
         cfg["ats"]["fixtures"] = {"1": {"host": "h", "port": 1, "station": "S"}, "2": {"host": "h", "port": 2, "station": "S"}}
-        cfg["flow"].update({"mode": "tray", "laser_check": {"enabled": True}})
+        cfg["flow"].update({"laser_check": {"enabled": True}})
         io = FakeIo(products=range(1, 3))
         bank = HeadBank.from_config({"enabled": True, "units": [{"vacuum": "RDO[%d]" % n, "cylinder": "RDO[%d]" % (8 + n), "pressure": "RDI[%d]" % n}
                                                                    for n in (1, 2)]}, io)
         sink = DataSink(Outbox(":memory:"), None)
         self.assertEqual(FlowError.__name__, "FlowError")
-        return E.Engine(cfg, FlowRobot(), {}, sink, ErrorTracker(sink, "M"), {}, taught_points(), ee=EndEffector(bank, None, laser),
+        return E.Engine(cfg, FlowRobot(), {}, sink, ErrorTracker(sink, "M"), taught_points(), ee=EndEffector(bank, None, laser),
                         trays=TRAYS)
 
     def test_the_program_refuses_to_start_without_a_laser(self):
@@ -386,7 +234,7 @@ class LaserNeedsALaser(unittest.TestCase):
             self.build(Off())
 
 
-class DropTests(FlowCase):
+class DropTests(EngineCase):
     """A head that loses its product on the way: the carry check before the next movement finds it."""
 
     def drop_head1_at_move(self, number):
@@ -425,7 +273,7 @@ class DropTests(FlowCase):
         self.assertEqual(self.eng.run_state, E.RUNNING)
 
 
-class TrayAlarmTests(FlowCase):
+class TrayAlarmTests(EngineCase):
     def codes(self):
         return {a["code"] for a in self.errors.active()}
 
@@ -459,7 +307,7 @@ class TrayAlarmTests(FlowCase):
         self.assertEqual(self.book().ng_used, 0)
 
 
-class OutputTrayFlowTests(FlowCase):
+class OutputTrayFlowTests(EngineCase):
     """The passed products go into output 1 (3 cells) and then output 2 (3 cells), never back into the input tray."""
     trays = TRAYS_OUT
 
@@ -507,11 +355,6 @@ class OutputTrayFlowTests(FlowCase):
         self.assertEqual((self.book().out_used, self.book().ng_used), ([2, 0], 0))
         flow.reset("all")
         self.assertEqual(self.book().out_used, [0, 0])
-
-
-class ClassicStillWorks(unittest.TestCase):
-    def test_default_mode_is_classic_and_has_no_flow(self):
-        self.assertEqual(DEFAULTS["flow"]["mode"], "classic")
 
 
 if __name__ == "__main__":

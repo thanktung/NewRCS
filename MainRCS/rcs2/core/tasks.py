@@ -1,29 +1,29 @@
-"""From a planner task to robot steps.
+"""Từ việc của planner sang các bước của robot.
 
-A task (planner.py) is turned into a list of STAGES. A stage is a short list of ordinary sequence steps (rcs2/core/sequence.py: robot
-move / ee heads / ee scanner / ee laser / ats) plus an optional COMMIT: what the books must record once the stage has really finished, e.g.
-"head 3 took the product of cell 12". The engine runs the stages one after the other and applies each commit when its stage is done,
-so the books always say where every product is, even when a later stage fails or the run is stopped between two stages.
+Một việc (planner.py) được đổi thành danh sách các STAGE. Một stage là một danh sách ngắn các bước sequence thông thường (rcs2/core/sequence.py: robot
+move / ee heads / ee scanner / ee laser / ats) cộng một COMMIT tùy chọn: điều sổ sách phải ghi lại khi stage đã thực sự xong, ví dụ
+"tay 3 đã lấy sản phẩm ở ô 12". Engine chạy lần lượt các stage và áp từng commit khi stage của nó xong,
+nên sổ sách luôn biết từng sản phẩm đang ở đâu, kể cả khi một stage sau bị lỗi hoặc lượt chạy bị dừng giữa hai stage.
 
-Poses are computed with all six values (geometry.Layout): a pick / place of head k at a cell or a box is ONE `move` to the pose that
-brings that head there, then that head's cylinder goes down, the vacuum switches, the cylinder goes up and the pressure sensor is checked.
+Pose được tính đủ sáu giá trị (geometry.Layout): một lần lấy / đặt của tay k tại một ô hoặc một box là MỘT lệnh `move` tới pose
+đưa tay đó tới đúng chỗ, rồi xy lanh của tay đó hạ xuống, van hút chuyển trạng thái, xy lanh nâng lên và cảm biến áp suất được kiểm tra.
 
-The cycles
-  pick from the input tray:  move the barcode reader over the cell -> read the code -> move head k over the cell -> down, vacuum on, up, check hold
-  put down (a box, an output tray, the input tray, the NG tray): move head k over the place -> down, vacuum off, up, check release
-                             -> the IL-1000 laser is moved over 2 measuring points of the product and must say GO at both (a tilted product is
-                                refused: alarm 9204)  [settings.json -> flow.laser_check]
-  before every movement of a head: a CARRY CHECK = the pressure sensors of every head that carries a product must still say "holding";
-  a head that lost its product on the way raises DropError (alarm 9208, the robot is stopped).
+Các chu trình
+  lấy từ tray Input:  đưa đầu đọc mã tới trên ô -> đọc mã -> đưa tay k tới trên ô -> hạ, bật hút, nâng, kiểm tra đã giữ
+  đặt xuống (box, tray output, tray Input, tray NG): đưa tay k tới trên chỗ đặt -> hạ, tắt hút, nâng, kiểm tra đã nhả
+                             -> đầu laser IL-1000 được đưa qua 2 điểm đo của sản phẩm và phải báo GO ở cả hai (sản phẩm nghiêng bị
+                                từ chối: alarm 9204)  [settings.json -> flow.laser_check]
+  trước mỗi lần một tay di chuyển: một CARRY CHECK = cảm biến áp suất của mọi tay đang cầm sản phẩm phải vẫn báo "đang giữ";
+  một tay đánh rơi sản phẩm trên đường đi sẽ ném DropError (alarm 9208, robot bị dừng).
 
-Commits (dicts, applied by FlowController.commit):
-    {"op": "take_tray", "cell": c, "head": k}            the head picked the product of input cell c
-    {"op": "take_box", "fixture": n, "head": k}          the head took the tested product out of box n
-    {"op": "place_box", "fixture": n, "head": k}         the head put its product into box n (its test starts)
-    {"op": "return_tray", "head": k, "cell": c}          the head put a passed product into the empty input cell c (the first empty one)
-                                                         [only when there are no output trays]
-    {"op": "put_out", "head": k, "tray": i, "cell": c}   the head put a passed product into cell c of output tray i (0-based): the next free one
-    {"op": "put_ng", "head": k}                          the head put a failed product into the next cell of the NG tray
+Commit (dict, được FlowController.commit áp dụng):
+    {"op": "take_tray", "cell": c, "head": k}            tay đã lấy sản phẩm ở ô Input c
+    {"op": "take_box", "fixture": n, "head": k}          tay đã lấy sản phẩm đã test ra khỏi box n
+    {"op": "place_box", "fixture": n, "head": k}         tay đã đặt sản phẩm vào box n (bắt đầu test)
+    {"op": "return_tray", "head": k, "cell": c}          tay đã đặt một sản phẩm đạt vào ô Input trống c (ô trống đầu tiên)
+                                                         [chỉ khi không có tray output]
+    {"op": "put_out", "head": k, "tray": i, "cell": c}   tay đã đặt một sản phẩm đạt vào ô c của tray output i (từ 0): ô trống kế tiếp
+    {"op": "put_ng", "head": k}                          tay đã đặt một sản phẩm hỏng vào ô kế tiếp của tray NG
 """
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -33,7 +33,7 @@ from .planner import ServiceTask, TakeTask, TrayTask
 
 
 class DropError(Exception):
-    """A head that carries a product no longer holds it (the pressure sensor lost it on the way)."""
+    """Một tay đang mang sản phẩm mà không còn giữ được nó (cảm biến áp suất mất tín hiệu trên đường đi)."""
 
 
 @dataclass
@@ -42,19 +42,19 @@ class Stage:
     steps: list
     commit: Optional[dict] = None
     fixture: Optional[int] = None
-    kind: str = ""                         # "carry" = the carry check: a failure means a dropped product
+    kind: str = ""                         # "carry" = carry check: lỗi nghĩa là đã đánh rơi sản phẩm
 
 
 @dataclass
 class BuildSettings:
-    override: Optional[int] = None         # robot speed (%) of the moves; None = the bridge default
-    check_timeout_s: float = 1.0           # time given to the pressure sensors
-    scan: bool = True                      # read the barcode of every product before it is picked (needs a scanner in the layout)
-    send_dut_out: bool = False             # tell the ATS that the tested product was taken out
-    auto_start_test: bool = True           # send placeDUTOK after a product was put in
-    via_tray: str = ""                     # optional taught points the robot passes through when it changes area
+    override: Optional[int] = None         # tốc độ robot (%) của các lần di chuyển; None = mặc định của bridge
+    check_timeout_s: float = 1.0           # thời gian cho cảm biến áp suất
+    scan: bool = True                      # đọc mã vạch từng sản phẩm trước khi hút (cần scanner trong layout)
+    send_dut_out: bool = False             # báo ATS rằng sản phẩm đã test đã được lấy ra
+    auto_start_test: bool = True           # gửi placeDUTOK sau khi đặt sản phẩm vào
+    via_tray: str = ""                     # điểm dạy tùy chọn robot đi qua khi đổi khu vực
     via_fixtures: str = ""
-    laser: bool = False                    # check a product that was put down with the IL-1000 (needs laser_at_O in the layout)
+    laser: bool = False                    # kiểm tra sản phẩm đã đặt xuống bằng IL-1000 (cần laser_at_O trong layout)
     laser_places: tuple = ("box", "input", "output")
     laser_offsets: tuple = ((-15.0, 0.0, 0.0), (15.0, 0.0, 0.0))
     laser_timeout_s: float = 1.0
@@ -63,9 +63,9 @@ class BuildSettings:
 class StageBuilder:
     def __init__(self, layout, book, settings: BuildSettings):
         self.layout, self.book, self.s = layout, book, settings
-        self.holding = set()               # heads that carry a product at this point of the task being built
+        self.holding = set()               # các tay đang mang sản phẩm ở thời điểm này của việc đang dựng
 
-    # ---- single movements ------------------------------------------------------------------------ #
+    # ---- từng lần di chuyển ---------------------------------------------------------------------- #
     def _move(self, pose):
         step = {"robot": "move", "target": pose}
         if self.s.override is not None:
@@ -88,14 +88,14 @@ class StageBuilder:
         return [self._move(point)] if point else []
 
     def _carry_check(self):
-        """Before a head moves: every head that carries a product must still hold it. [] when no head carries one."""
+        """Trước khi một tay di chuyển: mọi tay đang mang sản phẩm phải vẫn giữ được nó. [] khi không tay nào mang hàng."""
         if not self.holding:
             return []
         return [Stage("carry check heads %s" % sorted(self.holding),
                       [{"ee": "heads", "check": "hold", "heads": sorted(self.holding), "timeout_s": self.s.check_timeout_s}], kind="carry")]
 
     def _laser(self, kind, ref, fixture=None):
-        """The laser check of a product just put down at `ref` (cell index of a tray, or the fixture number): 2 measuring points."""
+        """Kiểm tra laser một sản phẩm vừa đặt xuống tại `ref` (chỉ số ô của một tray, hoặc số fixture): 2 điểm đo."""
         if not (self.s.laser and kind in self.s.laser_places):
             return []
         steps = []
@@ -103,7 +103,7 @@ class StageBuilder:
             steps += [self._move(pose), {"ee": "laser", "check": "ok", "timeout_s": self.s.laser_timeout_s}]
         return [Stage("laser check of the product at %s %s" % (kind, ref), steps, None, fixture)]
 
-    # ---- stages ---------------------------------------------------------------------------------- #
+    # ---- các stage ------------------------------------------------------------------------------- #
     def pick_from_tray(self, head, cell):
         stages = self._carry_check()
         if self.s.scan and self.layout.scanner:
@@ -116,7 +116,7 @@ class StageBuilder:
         return stages
 
     def put_back(self, head, dut, cell):
-        """A tested product goes into input cell `cell` (passed: the first empty cell) or into NG cell `cell` (failed)."""
+        """Một sản phẩm đã test vào ô Input `cell` (đạt: ô trống đầu tiên) hoặc vào ô NG `cell` (hỏng)."""
         stages = self._carry_check()
         if dut.need == D.RETURN:
             stages.append(Stage("head %d puts a passed product into empty cell %d" % (head, cell),
@@ -130,7 +130,7 @@ class StageBuilder:
         return stages + self._laser("ng", cell)
 
     def put_out(self, head, dut, slot):
-        """A passed product goes into the output tray cell `slot` = (tray index, cell) (the next free cell of the output trays)."""
+        """Một sản phẩm đạt vào ô của tray output `slot` = (chỉ số tray, ô) (ô trống kế tiếp của các tray output)."""
         tray, cell = slot
         stages = self._carry_check()
         stages.append(Stage("head %d puts a passed product into output %d cell %d" % (head, tray + 1, cell),
@@ -155,7 +155,7 @@ class StageBuilder:
                             [self._move(self.layout.fixture_pose(head, fixture))] + self._release(head),
                             {"op": "place_box", "fixture": fixture, "head": head}, fixture))
         self.holding.discard(head)
-        stages += self._laser("box", fixture, fixture)             # a tilted product must not start its test
+        stages += self._laser("box", fixture, fixture)             # sản phẩm bị nghiêng thì không được bắt đầu test
         ats = []
         if dut.sn:
             ats.append({"ats": "barcode", "sn": dut.sn, "fixture": fixture})
@@ -165,7 +165,7 @@ class StageBuilder:
             stages.append(Stage("box %d: start the test" % fixture, ats, None, fixture))
         return stages
 
-    # ---- whole tasks ----------------------------------------------------------------------------- #
+    # ---- cả một việc ----------------------------------------------------------------------------- #
     def build(self, task):
         self.holding = {d.location[1] for d in self.book.duts.values() if d.location[0] == D.HEAD}
         if isinstance(task, TrayTask):
@@ -190,8 +190,8 @@ class StageBuilder:
         if via:
             stages.append(Stage("via tray", via))
         ng_next = self.book.ng_used
-        empties = iter(self.book.empty_cells())                         # no output trays: passed products go into the first empty input cells
-        outs = iter(self.book.output_slots())                           # output trays: into their next free cells, tray 1 first
+        empties = iter(self.book.empty_cells())                         # không có tray output: hàng đạt vào các ô Input trống đầu tiên
+        outs = iter(self.book.output_slots())                           # có tray output: vào các ô trống kế tiếp của chúng, tray 1 trước
         for head, dut_id in task.sorts:
             dut = self.book.duts[dut_id]
             if dut.need == D.RETURN and self.book.has_outputs:

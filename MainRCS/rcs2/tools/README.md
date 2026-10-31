@@ -6,7 +6,7 @@ Không dùng trong vận hành bình thường. Được phép import `ats` và 
 |---|---|
 | `bridge_cli.py` | Thử bridge bằng dòng lệnh |
 | `flow_sim.py` | **mô phỏng what-if luồng tray** (planner + sổ sách, không robot): đo box rảnh bao lâu, số sản phẩm/giờ |
-| `demo.py` | `start_demo(settings, fixtures, speed, test_time)`: chạy **simulator + ATS giả trong cùng tiến trình** cho `python -m rcs2 --demo`; `DEMO_POINTS`, `DEMO_SEQUENCES` |
+| `demo.py` | `start_demo(settings, fixtures, speed, test_time)`: chạy **simulator + ATS giả trong cùng tiến trình** cho `python -m rcs2 --demo`; `sample_flow_points(settings)` = điểm mẫu cho luồng tray |
 
 ## bridge_cli
 ```powershell
@@ -33,5 +33,5 @@ Muốn cả cell mô phỏng chạy ở tiến trình riêng, dùng `python brid
 
 ## Hướng dẫn sửa
 - **Thêm lệnh vào bridge_cli:** thêm sub-parser trong `build_parser()` và nhánh xử lý trong `main()`.
-- **Đổi điểm / sequence của demo:** `DEMO_POINTS`, `DEMO_SEQUENCES` trong `demo.py` (chỉ là giá trị giữ chỗ).
+- **Đổi điểm của demo:** `sample_flow_points` trong `demo.py` (chỉ là giá trị giữ chỗ, tính theo số tay / tray / box trong settings).
 - **Đổi tốc độ mô phỏng của demo:** tham số `speed` (nhân thời gian chuyển động) và `test_time` của `start_demo`.

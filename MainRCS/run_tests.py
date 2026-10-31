@@ -1,13 +1,13 @@
-"""Run the NewRCS tests, all of them or only the modules you touched.
+"""Chạy test của NewRCS: tất cả, hoặc chỉ các module vừa sửa.
 
-    python run_tests.py                     every module
-    python run_tests.py robot ats           only tests/robot and tests/ats
-    python run_tests.py runtime -v          verbose (one line per test)
-    python run_tests.py core -k tray        only the tests whose name contains "tray"
-    python run_tests.py --list              the module names
+    python run_tests.py                     mọi module
+    python run_tests.py robot ats           chỉ tests/robot và tests/ats
+    python run_tests.py runtime -v          chi tiết (mỗi test một dòng)
+    python run_tests.py core -k tray        chỉ các test có tên chứa "tray"
+    python run_tests.py --list              tên các module
 
-Modules = the folders of tests/ (config core robot ats devices reporting employee runtime ui simulator) plus
-`architecture` (the import rules between the modules). The Qt tests run "offscreen": no window is opened.
+Module = các thư mục của tests/ (config core robot ats devices reporting employee runtime ui simulator) cùng với
+`architecture` (quy tắc import giữa các module). Test Qt chạy "offscreen": không mở cửa sổ nào.
 """
 import argparse
 import os

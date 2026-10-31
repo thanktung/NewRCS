@@ -1,8 +1,8 @@
-"""DataSink: the single entry point for "send data to the dashboard".
+"""DataSink: điểm vào duy nhất cho việc "gửi dữ liệu lên dashboard".
 
-emit() only appends to the local outbox (instant, never raises, never blocks on the network);
-a background thread uploads the outbox to MySQL in order, retrying with back-off.
-ErrorTracker turns "error started / error ended" events into the legacy interval rows.
+emit() chỉ ghi thêm vào outbox cục bộ (tức thì, không bao giờ ném lỗi, không bao giờ chờ mạng);
+một thread nền upload outbox lên MySQL theo đúng thứ tự, thử lại với thời gian chờ tăng dần.
+ErrorTracker biến các sự kiện "lỗi bắt đầu / lỗi kết thúc" thành các dòng khoảng thời gian của bảng cũ.
 """
 import logging
 import threading
@@ -20,7 +20,7 @@ def _iso(when=None):
 class DataSink:
     def __init__(self, outbox: Outbox, writer=None, enabled=True, flush_interval_s=2.0, max_backoff_s=30.0):
         self.outbox = outbox
-        self.writer = writer                 # object with write_batch(items) -> int, or None
+        self.writer = writer                 # đối tượng có write_batch(items) -> int, hoặc None
         self.enabled = enabled
         self.flush_interval_s = flush_interval_s
         self.max_backoff_s = max_backoff_s
@@ -31,7 +31,7 @@ class DataSink:
         self._thread = None
         self._backoff = flush_interval_s
 
-    # ---- producers -------------------------------------------------------- #
+    # ---- bên ghi dữ liệu -------------------------------------------------- #
     def emit(self, kind, payload):
         try:
             self.outbox.enqueue(kind, payload)
@@ -55,7 +55,7 @@ class DataSink:
     def emit_ats_hourly(self, fixture, ide, when=None):
         return self.emit("ats_hourly", {"fixture": fixture, "ide": ide, "update_time": _iso(when)})
 
-    # ---- uploader --------------------------------------------------------- #
+    # ---- bên upload ------------------------------------------------------- #
     def start(self):
         if self._thread is None:
             self._stop.clear()
@@ -72,7 +72,7 @@ class DataSink:
             self.flush_once()
 
     def flush_once(self):
-        """Upload what is pending. Returns the number of records uploaded (0 on failure/disabled)."""
+        """Upload những gì đang chờ. Trả về số bản ghi đã upload (0 khi lỗi / đang tắt)."""
         if not self.enabled or self.writer is None:
             return 0
         total = 0
@@ -114,9 +114,9 @@ class DataSink:
 
 
 class ErrorTracker:
-    """Errors are intervals. The legacy table needs start AND end in one row, so a row is emitted
-    when the error ends. Open errors are also saved in SQLite so a crash/power loss does not lose them:
-    on the next start they are closed using the last time the program was known to be alive."""
+    """Lỗi là các khoảng thời gian. Bảng cũ cần cả thời điểm bắt đầu VÀ kết thúc trong một dòng, nên dòng được ghi
+    khi lỗi kết thúc. Lỗi đang mở cũng được lưu trong SQLite để crash / mất điện không làm mất chúng:
+    lần khởi động sau, chúng được đóng bằng thời điểm cuối cùng chương trình còn sống."""
 
     def __init__(self, sink: DataSink, station_label=""):
         self.sink = sink
@@ -128,7 +128,7 @@ class ErrorTracker:
         key = key or code
         with self._lock:
             if key in self._open:
-                return False                         # already active
+                return False                         # đang mở rồi
             start = _iso(when)
             self._open[key] = (code, message, start)
         self.sink.outbox.save_open_error(key, code, message, self.station_label, start)
@@ -150,17 +150,17 @@ class ErrorTracker:
             return key in self._open
 
     def active(self):
-        """Currently open errors, oldest first: [{'key','code','message','since'}] (for the UI)."""
+        """Các lỗi đang mở, cũ nhất trước: [{'key','code','message','since'}] (cho UI)."""
         with self._lock:
             rows = [{"key": k, "code": c, "message": m, "since": s} for k, (c, m, s) in self._open.items()]
         return sorted(rows, key=lambda r: r["since"])
 
     def heartbeat(self):
-        """Call about once a minute: remembers that the program is alive (used by recover())."""
+        """Gọi khoảng mỗi phút một lần: ghi nhận chương trình còn sống (recover() dùng mốc này)."""
         self.sink.outbox.set_meta("last_alive", _iso())
 
     def recover(self):
-        """At start-up: close errors left open by a previous run. Returns how many were closed."""
+        """Lúc khởi động: đóng các lỗi còn mở từ lần chạy trước. Trả về số lỗi đã đóng."""
         last_alive = self.sink.outbox.get_meta("last_alive") or _iso()
         n = 0
         for row in self.sink.outbox.open_errors():

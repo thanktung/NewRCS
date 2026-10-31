@@ -1,7 +1,7 @@
-"""Wire protocol constants, mirrored inside bridge32/bridge_simple.py.
+"""Các hằng số của giao thức, có bản sao y hệt bên trong bridge32/bridge_simple.py.
 
-They are intentionally duplicated (the bridge is deployed on its own 32-bit PC as a single file);
-tests/test_bridge_simple.py fails if they ever drift apart.
+Cố ý để trùng lặp (bridge được triển khai thành một file duy nhất trên PC 32-bit riêng);
+tests/test_bridge_simple.py sẽ báo lỗi nếu hai bên lệch nhau.
 """
 import json
 
@@ -22,7 +22,7 @@ E_LIMIT = "LIMIT"
 E_VERIFY = "VERIFY_FAILED"
 E_ROBOT_ERROR = "ROBOT_ERROR"
 E_TIMEOUT = "TIMEOUT"
-E_PROGRAM_STOPPED = "PROGRAM_STOPPED"      # raised by NewRCS itself: UO[3] PROGRUN is off, no command may be written
+E_PROGRAM_STOPPED = "PROGRAM_STOPPED"      # do chính NewRCS ném: UO[3] PROGRUN đang tắt, không được ghi lệnh nào
 E_INTERNAL = "INTERNAL"
 
 MOTION_CODES = {

@@ -8,14 +8,14 @@ tests/
 ├─ test_architecture.py     quy tắc import giữa các module, Qt chỉ ở ui, simulator chỉ dùng thư viện chuẩn
 ├─ support/
 │   ├─ bridge.py            BridgeFixture: chạy simulator trên cổng trống cho một test (`.sim` = robot giả, `.client()`)
-│   └─ engine.py            EngineCase, FakeRobot, FakeAts, SEQ, POINTS, wait_until: Engine nối với đồ giả
+│   └─ engine.py            EngineCase (Engine luồng tray nối với đồ giả), FlowRobot, FakeAts, taught_points, tray_settings, wait_until
 ├─ config/    reporting/   employee/   ats/   devices/   core/   robot/   runtime/   ui/   simulator/
 ```
 
 | Thư mục | Kiểm tra | Khi nào chạy |
 |---|---|---|
 | `config` | file mẫu nạp được và hợp lệ | sửa `defaults.py`, `*.example.json` |
-| `core` | engine (chu kỳ, alarm, timeout, dừng, tray, UO[3]), sequence, tray; **luồng tray:** `test_geometry` (6 bậc tự do), `test_dut`, `test_planner` (quyết định + chạy cả lượt trên mô phỏng), `test_flow_engine` (engine + đồ giả), `test_flow_settings` | sửa `rcs2/core/` |
+| `core` | engine (bắt đầu / dừng, alarm, lỗi + xác nhận, timeout, UO[3]), sequence, tray; **luồng tray:** `test_geometry` (6 bậc tự do), `test_dut`, `test_planner` (quyết định + chạy cả lượt trên mô phỏng), `test_flow_engine` (engine + đồ giả), `test_flow_settings` | sửa `rcs2/core/` |
 | `robot` | chạy/dừng UOP, cấu hình `robot_start`, đồng bộ hằng số giao thức | sửa `rcs2/robot/` |
 | `ats` | khung tin, ghép luồng, kết nối lại, nhịp tim | sửa `rcs2/ats/` |
 | `devices` | đầu hút, laser, scanner, bước `ee` | sửa `rcs2/devices/` |
@@ -39,7 +39,7 @@ python -m unittest tests.core.test_engine # một file bằng unittest thuần
 ## Viết test mới
 - Đặt vào thư mục của module đang sửa, tên `test_*.py`. Import đồ dùng chung: `from tests.support.engine import EngineCase, FakeRobot, wait_until` hoặc
   `from tests.support import bridge as helpers` (`helpers.BridgeFixture`, `helpers.ROOT`).
-- Test engine: kế thừa `EngineCase` (đã có `self.eng`, `self.robot` giả, `self.ats`, `self.fx(n)`, `self.start_and_ready()`).
+- Test engine: kế thừa `EngineCase` (đã có `self.eng` ở luồng tray, `self.robot` giả, `self.ats`, `self.fx(n)`, `self.start()`, `self.answer_tests(...)`). Test dựng `Runtime`: dùng `tray_settings()`.
 - Test cần bridge: `helpers.BridgeFixture()` rồi `fx.client()`; nhớ `fx.close()` trong `tearDown`.
 - Test cần cả Runtime: xem `tests/runtime/test_program_state.py` (`RuntimeSimTests`) — Runtime trỏ vào `BridgeFixture`.
 - Chờ điều kiện bất đồng bộ bằng `wait_until(cond, timeout, what)`, **không** `time.sleep` cố định dài.

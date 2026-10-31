@@ -26,12 +26,12 @@ RCS2/
 │   ├─ tests/                    test chia theo module + test kiến trúc;  run_tests.py
 │   └─ run_rcs2.py
 ├─ docs/                         ARCHITECTURE.md · FEATURES.md · robot_bridge_guide.md
-└─ devtools/                     ui_preview (chụp ảnh + kiểm tra giao diện) · sfcs_probe
+└─ devtools/                     ui_preview (chụp ảnh + kiểm tra giao diện)
 ```
 
 | Module (`MainRCS/rcs2/`) | Làm gì |
 |---|---|
-| [`core`](MainRCS/rcs2/core/README.md) | engine lịch chạy, sequence, tray, **luồng tray** (8 tay hút, nhiều box, tray 3 điểm, planner) — **bộ não** |
+| [`core`](MainRCS/rcs2/core/README.md) | engine, **luồng tray** (8 tay hút, nhiều box, tray 3 điểm, planner), tray — **bộ não** |
 | [`robot`](MainRCS/rcs2/robot/README.md) | client bridge, giao thức, chạy/dừng chương trình robot (UOP) |
 | [`ats`](MainRCS/rcs2/ats/README.md) | giao thức + client ATS của fixture |
 | [`devices`](MainRCS/rcs2/devices/README.md) | End Effector: đầu hút, máy quét, laser |
@@ -57,7 +57,7 @@ python run_rcs2.py                      # terminal 2 (cần employee.offline_dem
 ## Cài đặt thật (một PC, hai Python)
 Cần **Python 3.11 64-bit** cho NewRCS (`venv` của dự án) và **Python 3.8+ 32-bit + pywin32** cho bridge thật (FRRJIf đã đăng ký trên PC). Bridge thật **không nằm trong repo này**
 (thư mục `bridge32/` hiện chỉ có simulator); giao thức: `docs/robot_bridge_guide.md`.
-1. `MainRCS\config\settings.json`: trỏ `bridge`, `ats.fixtures`, `end_effector`... về thiết bị thật (bản gốc trước khi trỏ sang simulator ở `config\archive\settings.json.pre_sim.bak`).
+1. `MainRCS\config\settings.json`: trỏ `bridge`, `ats.fixtures`, `end_effector`... về thiết bị thật (giá trị thật lưu ở `config\settings.real.json`).
 2. `config\sequences.json`: **dạy điểm thật** (cửa sổ Thủ công) rồi xóa dòng `"example": true`.
 3. Bí mật bằng biến môi trường: `RCS_DB_PASSWORD`, tùy chọn `RCS_BRIDGE_TOKEN`.
 4. `python run_rcs2.py`. Thử bridge: `python -m rcs2.tools.bridge_cli --host 127.0.0.1 status`.

@@ -3,13 +3,10 @@ import unittest
 
 from tests.support import bridge as helpers
 from rcs2.config import load_settings
-from rcs2.core import engine as E
 from rcs2.core import sequence as S
 from rcs2.devices import end_effector as EEM
 from rcs2.devices import heads as H
 from rcs2.devices import laser as L
-
-from tests.support.engine import POINTS, SEQ, EngineCase, FakeRobot, wait_until
 
 HEADS = 8
 
@@ -332,75 +329,6 @@ class SequenceStepTests(unittest.TestCase):
         self.assertEqual(io.writes[-1], ("RDO", 1, [0] * 8))                 # vacuum off
         with self.assertRaises(S.SequenceError):
             S.SequenceRunner(object(), {}, {}).run("x", [{"ee": "heads", "vacuum": "on"}], {})
-
-
-SEQ_EE = dict(SEQ)
-SEQ_EE["load"] = [{"ee": "heads", "cylinder": "down"}, {"ee": "heads", "vacuum": "on"},
-                  {"ee": "heads", "cylinder": "up"}, {"ee": "heads", "check": "hold", "timeout_s": 0.2},
-                  {"ee": "laser", "check": "ok", "timeout_s": 0.2},
-                  {"robot": "get", "station": 0}, {"robot": "put", "station": "{robot_station}"}]
-
-
-class EngineEndEffectorTests(EngineCase):
-    fixtures = 1
-    products = range(1, 9)
-    laser_go = 1
-
-    def setUp(self):
-        super().setUp()
-        self.eng.shutdown()
-        self.io = FakeIo(self.products)
-        self.io.bits[("RDI", 60)] = self.laser_go
-        bank = H.HeadBank.from_config(heads_cfg(), self.io)
-        bank.sleep = lambda s: None
-        laser = L.Laser.from_config(LaserTests.CFG, self.io)
-        laser.sleep = lambda s: None
-        self.ee = EEM.EndEffector(bank, None, laser)
-        self.robot = FakeRobot()
-        self.eng = E.Engine(self.cfg, self.robot, self.ats, self.sink, self.errors, SEQ_EE, POINTS, ee=self.ee)
-        self.eng.start()
-        self.eng.on_ats_connection(1, True)
-        self.eng.set_enabled(1, True)
-
-    def test_all_heads_hold_and_the_laser_is_go_then_the_robot_continues(self):
-        self.start_and_ready(1)
-        wait_until(lambda: self.fx(1)["state"] == E.TESTING, what="TESTING")
-        self.assertEqual(self.robot.calls[:2], [("get", 0), ("put", 1)])
-
-    def test_engine_refuses_a_sequence_that_needs_a_missing_tool_at_start_up(self):
-        with self.assertRaises(S.SequenceError):
-            E.Engine(self.cfg, self.robot, self.ats, self.sink, self.errors, SEQ_EE, POINTS,
-                     ee=EEM.EndEffector(self.ee.heads, None, None))              # no laser
-
-
-class EngineHeadFailureTests(EngineEndEffectorTests):
-    products = [1, 2, 3, 4, 6, 7, 8]                    # head 5 never gets a product
-
-    def test_all_heads_hold_and_the_laser_is_go_then_the_robot_continues(self):
-        self.start_and_ready(1)
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUN_FAULT, what="FAULT")
-        snap = self.eng.snapshot()
-        self.assertTrue(any(a["code"] == "9203" for a in snap["alarms"]), snap["alarms"])
-        self.assertFalse(any(a["code"] == "9201" for a in snap["alarms"]))
-        self.assertIn("đầu 5 không hút được", snap["fault_text"])
-        self.assertEqual(self.robot.calls, [])                              # the robot did not move on with a bad pick
-
-    def test_engine_refuses_a_sequence_that_needs_a_missing_tool_at_start_up(self):
-        pass
-
-
-class EngineLaserFailureTests(EngineEndEffectorTests):
-    laser_go = 0
-
-    def test_all_heads_hold_and_the_laser_is_go_then_the_robot_continues(self):
-        self.start_and_ready(1)
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUN_FAULT, what="FAULT")
-        snap = self.eng.snapshot()
-        self.assertTrue(any(a["code"] == "9204" for a in snap["alarms"]), snap["alarms"])
-        self.assertEqual(self.robot.calls, [])
-
-    def test_engine_refuses_a_sequence_that_needs_a_missing_tool_at_start_up(self):
-        pass
 
 
 class CoilIo:

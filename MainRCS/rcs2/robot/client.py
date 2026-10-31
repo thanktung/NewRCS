@@ -1,14 +1,14 @@
-"""Client of the robot bridge (blocking API, background reader thread, no Qt dependency).
+"""Client của bridge robot (API blocking, thread đọc chạy nền, không phụ thuộc Qt).
 
-    client = BridgeClient("127.0.0.1", 5600)       # the bridge runs on the same PC
+    client = BridgeClient("127.0.0.1", 5600)       # bridge chạy trên cùng PC
     client.connect()
     client.arm()
-    client.move([300, 0, 200, 180, 0, 0], override=10)      # blocks until the robot is done
+    client.move([300, 0, 200, 180, 0, 0], override=10)      # chờ tới khi robot làm xong
     client.put(station=1)
     client.disarm()
 
-Every failure is raised as RobotError(code, message) (code from protocol.E_*) or
-ConnectionError when the TCP link is down.
+Mọi lỗi được ném ra dạng RobotError(code, message) (code lấy từ protocol.E_*) hoặc
+ConnectionError khi đường TCP bị mất.
 """
 import logging
 import socket
@@ -33,12 +33,12 @@ class BridgeClient:
                  ping_interval=1.0, on_event=None, on_disconnect=None):
         self.host, self.port, self.token = host, port, token
         self.connect_timeout = connect_timeout
-        self.ping_interval = ping_interval      # 0 disables the keep-alive (tests only)
+        self.ping_interval = ping_interval      # 0 = tắt keep-alive (chỉ dùng trong test)
         self.on_event = on_event                # callable(name, data)
         self.on_disconnect = on_disconnect      # callable()
-        self.hello = None                       # data of the hello response
+        self.hello = None                       # dữ liệu của phản hồi hello
         self.last_status = {}
-        self.program_state = None               # UO[3] PROGRUN as last read: True / False, None = unknown (see refresh_program_state)
+        self.program_state = None               # UO[3] PROGRUN theo lần đọc gần nhất: True / False, None = chưa biết (xem refresh_program_state)
         self._sock = None
         self._send_lock = threading.Lock()
         self._pending = {}
@@ -49,7 +49,7 @@ class BridgeClient:
         self._closing = threading.Event()
 
     # ------------------------------------------------------------------ #
-    # connection
+    # kết nối
     # ------------------------------------------------------------------ #
     @property
     def connected(self):
@@ -110,7 +110,7 @@ class BridgeClient:
                 log.exception("on_disconnect failed")
 
     # ------------------------------------------------------------------ #
-    # threads
+    # các thread
     # ------------------------------------------------------------------ #
     def _read_loop(self, sock):
         try:
@@ -156,7 +156,7 @@ class BridgeClient:
                 return
 
     # ------------------------------------------------------------------ #
-    # request / response
+    # yêu cầu / phản hồi
     # ------------------------------------------------------------------ #
     def call(self, cmd, args=None, timeout=10.0):
         sock = self._sock
@@ -188,7 +188,7 @@ class BridgeClient:
         raise RobotError(err.get("code", P.E_INTERNAL), err.get("message", ""))
 
     # ------------------------------------------------------------------ #
-    # convenience API
+    # API tiện dụng
     # ------------------------------------------------------------------ #
     def status(self):
         return self.call("status")
@@ -201,7 +201,7 @@ class BridgeClient:
 
     def arm(self):
         data = self.call("arm")
-        self.last_status = dict(self.last_status, armed=True)     # do not wait for the next status event
+        self.last_status = dict(self.last_status, armed=True)     # không chờ sự kiện status kế tiếp
         return data
 
     def disarm(self):
@@ -216,7 +216,7 @@ class BridgeClient:
         return self.call("alarm.clear")
 
     def pos_read(self):
-        """Fresh current position: {'xyzwpr': [6], 'config': [7], 'uf': n, 'ut': n}."""
+        """Vị trí hiện tại, đọc mới: {'xyzwpr': [6], 'config': [7], 'uf': n, 'ut': n}."""
         return self.call("pos.read")
 
     def r_read(self, index):
@@ -244,20 +244,20 @@ class BridgeClient:
     def io_write(self, kind, index, values):
         return self.call("io.write", {"kind": kind, "index": index, "values": list(values)})["values"]
 
-    # --- is the robot program running? (UO[3] PROGRUN; reading needs no arm) ---
+    # --- chương trình robot có đang chạy không? (UO[3] PROGRUN; đọc không cần arm) ---
     def program_running(self):
-        """True / False from a fresh read of UO[3]. Raises RobotError / ConnectionError when it cannot be read."""
+        """True / False từ một lần đọc mới UO[3]. Ném RobotError / ConnectionError khi không đọc được."""
         return bool(self.io_read("UO", UO_PROGRUN, 1)[0])
 
     def refresh_program_state(self):
-        """Fresh read of UO[3] stored in `program_state` and returned: True / False, or None when it cannot be read."""
+        """Đọc mới UO[3], lưu vào `program_state` và trả về: True / False, hoặc None khi không đọc được."""
         try:
             self.program_state = self.program_running()
         except (RobotError, ConnectionError, OSError):
             self.program_state = None
         return self.program_state
 
-    # --- motion (blocking until the robot reports done) ---
+    # --- chuyển động (blocking tới khi robot báo xong) ---
     def _motion(self, op, args, timeout_s):
         if timeout_s is not None:
             args["timeout_s"] = timeout_s

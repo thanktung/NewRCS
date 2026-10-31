@@ -1,20 +1,20 @@
-"""Product trays of the cell: the INPUT tray (DUTs waiting to be picked), the NG tray (failed DUTs put down) and, optionally, two OUTPUT
-trays (output1, output2: passed DUTs only, used in this order)
+"""Các tray sản phẩm của cell: tray INPUT (DUT chờ được hút), tray NG (nơi đặt DUT hỏng) và, tùy chọn, hai tray OUTPUT
+(output1, output2: chỉ hàng đạt, dùng theo thứ tự này)
 
-Each tray is a grid of `rows x cols` cells and the size is NOT fixed in code: it is set only in settings.json
-(restart to apply):
+Mỗi tray là một lưới `rows x cols` ô và kích thước KHÔNG cố định trong code: chỉ đặt trong settings.json
+(khởi động lại để áp dụng):
 
     "trays": {"input": {"rows": 5, "cols": 8}, "ng": {"rows": 4, "cols": 6}}
 
-Cells are used in reading order (row by row, left to right, starting at the top left).
-  input  starts FULL.   Every DUT the robot picks empties the next cell. EMPTY = nothing left to load.
-  ng     starts EMPTY.  Every NG DUT the robot puts down fills the next cell. FULL = the tray must be emptied.
-  output1 / output2  start EMPTY, like ng: every passed DUT put down fills the next cell (output1 first, then output2).
-The operator tells the program when the tray was refilled / emptied (`reset`). The state is not stored on disk: after a
-restart the input tray counts as full and the NG tray as empty again.
+Các ô được dùng theo thứ tự đọc (từng hàng, trái sang phải, bắt đầu từ góc trên bên trái).
+  input  ban đầu ĐẦY.   Mỗi DUT robot hút đi làm trống ô kế tiếp. TRỐNG = hết hàng để nạp.
+  ng     ban đầu TRỐNG. Mỗi DUT NG robot đặt xuống lấp ô kế tiếp. ĐẦY = phải dọn tray.
+  output1 / output2  ban đầu TRỐNG, giống ng: mỗi DUT đạt được đặt xuống lấp ô kế tiếp (output1 trước, rồi output2).
+Người vận hành báo cho chương trình khi tray đã được nạp lại / dọn trống (`reset`). Trạng thái không lưu xuống đĩa: sau khi
+khởi động lại, tray Input lại được coi là đầy và tray NG là trống.
 """
 KINDS = ("input", "ng", "output1", "output2")
-TITLES = {"input": "Tray Input", "ng": "Tray NG", "output1": "Tray Output 1", "output2": "Tray Output 2"}      # as the screens show them
+TITLES = {"input": "Tray Input", "ng": "Tray NG", "output1": "Tray Output 1", "output2": "Tray Output 2"}      # như các màn hình hiển thị
 MAX_SIDE = 50
 
 
@@ -23,7 +23,7 @@ class TrayConfigError(ValueError):
 
 
 def check_size(kind, rows, cols):
-    """(rows, cols) as ints within 1..MAX_SIDE, otherwise TrayConfigError."""
+    """(rows, cols) là số nguyên trong khoảng 1..MAX_SIDE, nếu không thì TrayConfigError."""
     for label, v in (("số hàng", rows), ("số cột", cols)):
         if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= MAX_SIDE:
             raise TrayConfigError("tray %s: %s phải là số nguyên từ 1 đến %d (nhận %r)" % (kind, label, MAX_SIDE, v))
@@ -36,7 +36,7 @@ class Tray:
             raise TrayConfigError("loại tray %r không có (input | ng | output1 | output2)" % kind)
         self.kind = kind
         self.rows, self.cols = check_size(kind, rows, cols)
-        self.done = 0                         # cells already used, counted in reading order
+        self.done = 0                         # số ô đã dùng, đếm theo thứ tự đọc
 
     @property
     def capacity(self):
@@ -44,23 +44,23 @@ class Tray:
 
     @property
     def exhausted(self):
-        """input: nothing left to pick. ng: no room left to put a DUT."""
+        """input: không còn gì để hút. ng: không còn chỗ đặt DUT."""
         return self.done >= self.capacity
 
     @property
     def count(self):
-        """DUTs inside the tray right now (input: still waiting, ng: already put down)."""
+        """Số DUT đang nằm trong tray lúc này (input: còn chờ, ng: đã đặt xuống)."""
         return self.capacity - self.done if self.kind == "input" else self.done
 
     def advance(self):
-        """One cell used (a DUT picked from the input tray / put into the NG tray). False when there is no cell left."""
+        """Dùng một ô (hút một DUT từ tray Input / đặt một DUT vào tray NG). False khi không còn ô nào."""
         if self.exhausted:
             return False
         self.done += 1
         return True
 
     def reset(self):
-        """The operator refilled the input tray / emptied the NG tray."""
+        """Người vận hành đã nạp lại tray Input / dọn trống tray NG."""
         self.done = 0
 
     def snapshot(self):
@@ -69,7 +69,7 @@ class Tray:
 
 
 def build_trays(cfg):
-    """{"input": {"rows", "cols"}, "ng": {...}} -> {kind: Tray}. Kinds that are missing are simply not used."""
+    """{"input": {"rows", "cols"}, "ng": {...}} -> {kind: Tray}. Loại nào thiếu thì đơn giản là không dùng."""
     trays = {}
     for kind, size in (cfg or {}).items():
         if str(kind).startswith("_"):

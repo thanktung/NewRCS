@@ -44,14 +44,11 @@ def main(argv=None):
     stop_demo = None
     try:
         if args.demo:
-            from ..tools.demo import DEMO_POINTS, DEMO_SEQUENCES, sample_flow_points, start_demo
+            from ..tools.demo import sample_flow_points, start_demo
             base = load_settings(args.config if os.path.exists(args.config) else None)
             base["outbox_path"] = os.path.join(ROOT, "data", "outbox_demo.sqlite")
             settings, stop_demo = start_demo(base, fixtures=args.demo_fixtures)
-            points = dict(DEMO_POINTS)
-            if settings["flow"]["mode"] == "tray":
-                points.update(sample_flow_points(settings))              # sample coordinates so that the tray flow can run
-            seq = {"points": points, "sequences": DEMO_SEQUENCES, "example": True}
+            seq = {"points": sample_flow_points(settings), "example": True}      # sample coordinates so that the tray flow can run
         else:
             if not os.path.exists(args.config):
                 raise FileNotFoundError(

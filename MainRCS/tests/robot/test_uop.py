@@ -1,17 +1,15 @@
 """Starting RSR0001 through the UOP signals: UI[n] driven as SDI[n], results read from UO[n]."""
-import copy
 import os
 import tempfile
 import unittest
 
 from tests.support import bridge as helpers
-from rcs2.config import DEFAULTS
 from rcs2.core.sequence import save_sequences
 from rcs2.robot import uop as U
 from rcs2.robot.client import RobotError
 from rcs2.runtime import Runtime
 
-from tests.support.engine import SEQ
+from tests.support.engine import tray_settings
 
 
 class FakeController:
@@ -272,11 +270,11 @@ class FakeBridge:
 class RuntimeTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        cfg = copy.deepcopy(DEFAULTS)
+        cfg = tray_settings()
         cfg["outbox_path"] = "outbox.sqlite"
         cfg["engine"]["sequences_path"] = "sequences.json"
         cfg["robot_start"].update({"pulse_s": 0.01, "poll_s": 0.01, "reset_wait_s": 0.2, "run_wait_s": 0.2})
-        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": {}, "sequences": SEQ})
+        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": {}})
         self.rt = Runtime(cfg, self.tmp.name)
         self.ctrl = FakeController()
         self.rt.bridge = FakeBridge(self.ctrl)
@@ -353,7 +351,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(self.rt.robot_start_program(), "RSR0001 đang chạy")
 
     def test_a_bad_robot_start_setting_stops_the_start_up(self):
-        cfg = copy.deepcopy(DEFAULTS)
+        cfg = tray_settings()
         cfg["outbox_path"] = "outbox2.sqlite"
         cfg["engine"]["sequences_path"] = "sequences.json"
         cfg["robot_start"]["rsr"] = 12

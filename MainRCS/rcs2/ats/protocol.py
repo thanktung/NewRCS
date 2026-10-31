@@ -1,22 +1,22 @@
-"""Protocol between RCS and the small ATS program of each fixture (unchanged from the old RCS).
+"""Giao thức giữa RCS và chương trình ATS nhỏ của từng fixture (giữ nguyên từ RCS cũ).
 
-Frames are UTF-8 text terminated by "_CEND"; fields inside a frame are separated by '+'.
+Khung là văn bản UTF-8 kết thúc bằng "_CEND"; các trường trong khung cách nhau bằng '+'.
 
 RCS -> ATS : CtoT_placeDUTOK, B1=<SN>, CtoT_placeBarcode, DUT_OUT, f_open, f_close, aaa (heartbeat)
 ATS -> RCS : TtoC_resultPass / resultNG+<item>+<value> / resultRetest / resultRetest1 / resultFQC /
              resultWarning / resultWaitdut / resultBusy / barcode+<SN> / BarcodePass+<SN> / BarcodeNG /
              resultOffsetPass|NG+<offset>+<SN> / AVI... / startOK / readcodeOK / fix_open|close|error
 
-Matching is case-insensitive "contains", exactly like the old program, but the more specific
-names are tested first (e.g. Retest1 before Retest, BarcodePass before barcode). The old code
-tested "barcode" first, so a BarcodePass frame was treated as a plain barcode there.
+So khớp kiểu "chứa chuỗi", không phân biệt hoa thường, giống hệt chương trình cũ, nhưng tên cụ thể hơn
+được thử trước (ví dụ Retest1 trước Retest, BarcodePass trước barcode). Code cũ thử
+"barcode" trước, nên ở đó một khung BarcodePass bị coi là barcode thường.
 """
 import codecs
 from dataclasses import dataclass
 
 TERMINATOR = "_CEND"
 
-# ---- event kinds ---------------------------------------------------------- #
+# ---- loại sự kiện --------------------------------------------------------- #
 PASS = "PASS"
 NG = "NG"
 RETEST = "RETEST"
@@ -38,7 +38,7 @@ FIX_CLOSE = "FIX_CLOSE"
 FIX_ERROR = "FIX_ERROR"
 UNKNOWN = "UNKNOWN"
 
-# (upper-case needle, kind) - first match wins
+# (chuỗi cần tìm viết hoa, loại) - khớp đầu tiên được chọn
 _RULES = [
     ("TTOC_RESULTPASS", PASS),
     ("TTOC_RESULTWAITDUT", WAITDUT),
@@ -68,11 +68,11 @@ _RULES = [
 class AtsEvent:
     kind: str
     raw: str
-    item: str = ""        # NG item
-    value: str = ""       # NG value
-    sn: str = ""          # barcode / serial number
-    offset: str = ""      # position offset
-    detail: str = ""      # free text (warning, retest, AVI)
+    item: str = ""        # hạng mục NG
+    value: str = ""       # giá trị NG
+    sn: str = ""          # mã vạch / số serial
+    offset: str = ""      # độ lệch vị trí
+    detail: str = ""      # văn bản tự do (cảnh báo, retest, AVI)
 
     @property
     def is_result(self):
@@ -84,7 +84,7 @@ def _field(parts, i):
 
 
 def parse_message(text):
-    """Frame text (without the terminator) -> AtsEvent."""
+    """Văn bản khung (không có ký tự kết thúc) -> AtsEvent."""
     up = text.upper()
     kind = UNKNOWN
     for needle, k in _RULES:
@@ -109,7 +109,7 @@ def parse_message(text):
 
 
 class FrameDecoder:
-    """Splits a TCP byte stream into frames (the stream may cut or merge frames anywhere)."""
+    """Tách luồng byte TCP thành các khung (luồng có thể cắt hoặc gộp khung ở bất cứ đâu)."""
 
     def __init__(self):
         self._dec = codecs.getincrementaldecoder("utf-8")(errors="replace")
@@ -123,7 +123,7 @@ class FrameDecoder:
             if i < 0:
                 break
             frame, self._buf = self._buf[:i], self._buf[i + len(TERMINATOR):]
-            if frame.strip():          # empty frames (e.g. "f_open_CEND_CEND") are ignored
+            if frame.strip():          # khung rỗng (ví dụ "f_open_CEND_CEND") bị bỏ qua
                 frames.append(frame)
         return frames
 
@@ -132,7 +132,7 @@ def encode_frame(text):
     return (text + TERMINATOR).encode("utf-8")
 
 
-# ---- RCS -> ATS message builders ------------------------------------------ #
+# ---- dựng tin nhắn RCS -> ATS --------------------------------------------- #
 HEARTBEAT = "aaa"
 FIXSTATUS = "fixstatus"
 

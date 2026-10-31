@@ -1,7 +1,7 @@
-"""Launcher for the RCS PC. In PyCharm: right-click this file -> Run.
+"""Trình khởi chạy cho PC RCS. Trong PyCharm: chuột phải vào file này -> Run.
 
-    python run_rcs2.py                  real mode (needs config/settings.json and config/sequences.json)
-    python run_rcs2.py --demo --autorun simulated robot + mock ATS, no hardware
+    python run_rcs2.py                  chế độ thật (cần config/settings.json và config/sequences.json)
+    python run_rcs2.py --demo --autorun robot mô phỏng + ATS giả, không cần phần cứng
 """
 import os
 import sys

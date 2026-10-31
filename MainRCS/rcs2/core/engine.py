@@ -1,46 +1,39 @@
-"""Scheduling engine.
+"""Engine lập lịch.
 
-One engine thread owns all state and handles events one at a time (ATS messages, operator commands,
-job completions, ticks), so there are no shared-flag races. Robot sequences are blocking, so they run
-in a separate job thread (one at a time: there is one robot) and report back with an event.
+Một thread engine giữ toàn bộ trạng thái và xử lý từng sự kiện một (tin nhắn ATS, lệnh của người vận hành,
+job xong, tick), nên không có tranh chấp cờ dùng chung. Việc của robot là blocking, nên chạy trong một
+thread job riêng (mỗi lúc một job: chỉ có một robot) và báo lại bằng một sự kiện.
 
-Per fixture:  OFFLINE/No Used -> IDLE --WAITDUT--> load job -> TESTING --result--> unload job -> IDLE ...
-Robot jobs are the sequences "load" and "unload_pass" / "unload_ng" / "unload_retest" / "unload_fqc"
-(see rcs2/core/sequence.py). Tested DUTs are unloaded before new ones are loaded.
+Robot phục vụ tối đa 8 tay hút và nhiều box (rcs2/core/flow.py): planner quyết định, robot chạy các STAGE
+(lấy / đổi / cất), và commit của mỗi stage cập nhật sổ sách của từng sản phẩm đúng lúc robot thực sự làm xong;
+lệnh dừng có hiệu lực giữa hai stage.
 
-Alarm codes (kept from the old RCS where they existed)
-  9026 RCS stop/pause    9011 consecutive NG    9012 ATS not connected    9013 fixture error
-  9010 test timeout      9201 robot/sequence error                         9100 robot link / disarmed
-  9202 barcode could not be read (scan step failed after its retries; nothing was picked)
-  9203 End Effector heads error (a head did not pick up / release, cylinder did not reach its position, I/O failure)
-  9204 End Effector laser (IL-1000) check failed
-  9205 the points needed by the tray flow are not taught yet (Start refused)
-  9206 tray flow: no untested product left and everything is put away -> put a new input tray, then press "Nạp lại"
-  9207 tray flow: the NG tray is full -> empty / change it, then press "Đã dọn"
-  9209 tray flow: every output tray (passed products) is full -> empty / change them, then press "Đã dọn" of that tray
-  9208 tray flow: a head dropped its product (carry check) -> run stopped and the robot program stopped
-Trays (input / NG, see rcs2/core/tray.py): a load takes one cell from the input tray, an NG unload fills one cell of the
-NG tray. No load starts while the input tray is empty.
-
-Two flows (settings.json -> flow.mode). "classic" is the one described above. "tray" (rcs2/core/flow.py) serves up to 8 heads and
-many boxes: the planner decides, the robot runs STAGES (pick / swap / sort), and a stage commit updates the books of every product
-as the robot really finishes it; a stop takes effect between two stages.
+Mã alarm (giữ theo RCS cũ khi đã có)
+  9026 RCS dừng/tạm dừng  9011 NG liên tiếp          9012 ATS chưa kết nối     9013 lỗi fixture
+  9010 test quá thời gian 9201 lỗi robot/sequence                              9100 mất liên kết robot / bị disarm
+  9202 không đọc được mã vạch (bước quét thất bại sau mọi lần thử lại; chưa hút gì)
+  9203 lỗi tay hút của End Effector (tay không hút / nhả được, xy lanh không tới vị trí, lỗi I/O)
+  9204 kiểm tra laser (IL-1000) của End Effector không đạt
+  9205 chưa dạy đủ các điểm luồng tray cần (Bắt đầu bị từ chối)
+  9206 luồng tray: hết hàng chưa test và mọi sản phẩm đã được cất -> đặt tray Input mới, rồi bấm "Nạp lại"
+  9207 luồng tray: tray NG đã đầy -> dọn / thay tray, rồi bấm "Đã dọn"
+  9209 luồng tray: mọi tray output (hàng đạt) đã đầy -> dọn / thay chúng, rồi bấm "Đã dọn" của tray đó
+  9208 luồng tray: một tay đánh rơi sản phẩm (carry check) -> dừng chạy và dừng chương trình robot
 """
 import logging
 import queue
 import threading
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 
 from ..ats import protocol as AP
 from ..devices.heads import HeadError
 from .flow import FlowController, FlowError, FlowSettings
 from .geometry import GeometryError
-from .sequence import SequenceError, SequenceRunner, validate
+from .sequence import SequenceRunner, validate
 from .tasks import DropError
 from .states import (FAULT, IDLE, LOADING, NO_USED, OFFLINE, PAUSED, RESULT, RUN_FAULT, RUNNING, STOPPED, TESTING,
-                     UNLOADING, WAIT_LOAD)
+                     UNLOADING)
 from .tray import build_trays
 
 log = logging.getLogger("rcs2.engine")
@@ -48,8 +41,6 @@ log = logging.getLogger("rcs2.engine")
 RESULT_LABEL = {AP.PASS: "PASS", AP.NG: "NG", AP.RETEST: "RETEST", AP.RETEST1: "RETEST",
                 AP.FQC: "FQC", AP.WARNING: "WARNING", AP.OFFSET_PASS: "PASS", AP.OFFSET_NG: "NG"}
 COUNTS_AS_FAIL = ("NG", "RETEST", "WARNING")
-UNLOAD_SEQUENCE = {"PASS": ("unload_pass",), "NG": ("unload_ng",), "RETEST": ("unload_retest", "unload_ng"),
-                   "FQC": ("unload_fqc", "unload_pass"), "WARNING": ("unload_ng",)}
 
 
 @dataclass
@@ -60,7 +51,7 @@ class Fixture:
     ats_host: str = ""
     enabled: bool = False
     connected: bool = False
-    ats_ready: bool = False        # the ATS reported "waiting for a DUT"
+    ats_ready: bool = False        # ATS đã báo "đang chờ DUT"
     dut_inside: bool = False
     state: str = OFFLINE
     sn: str = ""
@@ -74,9 +65,9 @@ class Fixture:
     last_test_time: float = 0.0
     test_started: float = 0.0
     message: str = ""
-    dut: object = None             # tray flow: the product inside (dut.Dut)
-    finished: bool = False         # tray flow: the result of `dut` is in and it waits to be taken out
-    idle_since: float = 0.0        # tray flow: since when the box waits for the robot
+    dut: object = None             # sản phẩm đang ở bên trong (dut.Dut)
+    finished: bool = False         # đã có kết quả của `dut` và nó đang chờ được lấy ra
+    idle_since: float = 0.0        # box chờ robot từ lúc nào
 
     @property
     def yield_pct(self):
@@ -86,43 +77,33 @@ class Fixture:
 @dataclass
 class Job:
     id: int
-    kind: str                     # "load" | "unload"
+    kind: str                     # "flow"
     fixture: int
-    result: str = ""
-    sn: str = ""                  # barcode read by a scanner step of the sequence
-    sequence: str = ""            # name of the sequence that ran (set when the job starts)
-    task: object = None           # tray flow: the planner task this job carries out
-    stages: list = field(default_factory=list)     # tray flow: the stages (tasks.Stage) of the task
+    sequence: str = ""            # loại việc của planner (hiện trong log)
+    task: object = None           # việc của planner mà job này thực hiện
+    stages: list = field(default_factory=list)     # các stage (tasks.Stage) của việc
     created: float = field(default_factory=time.time)
 
 
 class Engine:
-    def __init__(self, settings, robot, ats, sink, errors, sequences, points, clock=time.monotonic, ee=None, trays=None):
+    def __init__(self, settings, robot, ats, sink, errors, points, clock=time.monotonic, ee=None, trays=None):
         self.cfg = settings
         self.robot = robot
-        self.ats = ats                      # {fixture_no: AtsClient-like}
+        self.ats = ats                      # {số fixture: đối tượng giống AtsClient}
         self.sink = sink
         self.errors = errors
-        self.sequences = sequences
         self.points = points
         self.clock = clock
-        self.on_log = None                  # callable(level, text) for the UI log
-        self.block_reason = ""              # non-empty: Start is refused (e.g. example points on a real robot)
+        self.on_log = None                  # callable(level, text) cho log trên UI
+        self.block_reason = ""              # khác rỗng: Bắt đầu bị từ chối (ví dụ điểm mẫu trên robot thật)
 
-        self.ee = ee                        # the End Effector (heads / scanner / laser) or None
-        validate(sequences, points, ee.capabilities() if ee is not None else None)
-        self.trays = build_trays(trays)     # {"input": Tray, "ng": Tray}; empty = trays not configured
-        heads = getattr(getattr(ee, "heads", None), "count", 0)         # number of suction heads (a stand-in End Effector may have none)
+        self.ee = ee                        # End Effector (tay hút / đầu đọc mã / laser) hoặc None
+        validate({}, points)                # điểm dạy viết sai được báo ngay lúc khởi động
+        self.trays = build_trays(trays)     # {"input": Tray, "ng": Tray, ...}
+        heads = getattr(getattr(ee, "heads", None), "count", 0)         # số tay hút (End Effector thay thế dùng trong test có thể không có)
         self.flow_settings = FlowSettings.from_config(settings, heads)
-        if self.flow_settings.mode == "classic":
-            for name in ("load", "unload_pass", "unload_ng"):
-                if name not in sequences:
-                    raise SequenceError("sequence %r is required" % name)
 
         e = settings["engine"]
-        self.reload_after_unload = e["reload_after_unload"]
-        self.auto_start_test = e["auto_start_test"]
-        self.send_dut_out = e["send_dut_out"]
         self.test_timeout_s = e["test_timeout_s"]
         self.ng_limit = settings["consecutive_ng"]["limit"]
         self.ng_stop = settings["consecutive_ng"]["stop_fixture"]
@@ -132,19 +113,16 @@ class Engine:
             n = int(key)
             self.fixtures[n] = Fixture(n, f.get("station", "Station1"), int(f.get("robot_station", n)),
                                        ats_host=f.get("host", ""))
-        self.flow = None                    # FlowController in the "tray" flow, otherwise None
-        self.on_drop = None                 # callable(text): a head dropped its product (the runtime stops the robot program)
-        if self.flow_settings.mode == "tray":
-            laser = getattr(ee, "laser", None)
-            if self.flow_settings.laser and (laser is None or not getattr(laser, "enabled", True)):
-                raise FlowError("flow.laser_check is on but the End Effector has no enabled laser (end_effector.laser.enabled)")
-            self.flow = FlowController(self.flow_settings, trays, self.fixtures.keys(), heads,
-                                       getattr(ee, "scanner", None) is not None, settings["bridge"].get("default_override"), e)
+        self.on_drop = None                 # callable(text): một tay đánh rơi sản phẩm (runtime dừng chương trình robot)
+        laser = getattr(ee, "laser", None)
+        if self.flow_settings.laser and (laser is None or not getattr(laser, "enabled", True)):
+            raise FlowError("flow.laser_check is on but the End Effector has no enabled laser (end_effector.laser.enabled)")
+        self.flow = FlowController(self.flow_settings, trays, self.fixtures.keys(), heads,
+                                   getattr(ee, "scanner", None) is not None, settings["bridge"].get("default_override"), e)
         self.run_state = STOPPED
         self.fault_text = ""
         self._armed_at = 0.0
         self._disarm_after_job = False
-        self._jobs = []
         self._job_seq = 0
         self._current = None
         self._events = queue.Queue()
@@ -152,13 +130,12 @@ class Engine:
         self._stop = threading.Event()
         self._cancel = threading.Event()
         self._thread = None
-        self._tray_warned = set()           # tray kinds whose "empty / full" warning was already logged
-        self._program_off_since = None      # since when UO[3] PROGRUN is off (None = on / unknown)
+        self._program_off_since = None      # UO[3] PROGRUN tắt từ lúc nào (None = bật / chưa biết)
         self._runner = SequenceRunner(robot, ats, points, settings["bridge"].get("default_override"),
                                       log=lambda m: self._log("debug", m), ee=ee)
 
     # ------------------------------------------------------------------ #
-    # lifecycle
+    # vòng đời
     # ------------------------------------------------------------------ #
     def start(self):
         self._stop.clear()
@@ -176,14 +153,14 @@ class Engine:
 
     def _log(self, level, text):
         getattr(log, level if level != "warn" else "warning")(text)
-        if self.on_log and level != "debug":          # per-step details only go to the log file
+        if self.on_log and level != "debug":          # chi tiết từng bước chỉ ghi vào file log
             try:
                 self.on_log(level, text)
             except Exception:
                 pass
 
     # ------------------------------------------------------------------ #
-    # public commands (thread safe: they only post events)
+    # lệnh công khai (thread safe: chúng chỉ post sự kiện)
     # ------------------------------------------------------------------ #
     def start_run(self):
         self.post("cmd", "start")
@@ -198,9 +175,9 @@ class Engine:
         self.post("cmd", "ack_fault")
 
     def wait_processed(self, timeout=2.0):
-        """Blocks until every command posted before this call has been handled by the engine thread (False if the
-        engine is not running or did not answer in time). Lets a caller be sure that e.g. the disarm that follows
-        stop_run() has happened, instead of landing in the middle of its own next arm."""
+        """Chặn tới khi mọi lệnh post trước lần gọi này đã được thread engine xử lý (False nếu
+        engine không chạy hoặc không trả lời kịp). Giúp bên gọi chắc chắn rằng, ví dụ, lệnh disarm sau
+        stop_run() đã xảy ra, thay vì rơi vào giữa lần arm kế tiếp của chính nó."""
         thread = self._thread
         if thread is None or not thread.is_alive():
             return False
@@ -211,15 +188,12 @@ class Engine:
     def set_enabled(self, number, enabled):
         self.post("cmd", "enable", number, bool(enabled))
 
-    def reset_fixture(self, number, dut_inside):
-        self.post("cmd", "reset_fixture", number, bool(dut_inside))
-
     def reset_tray(self, kind):
-        """The operator refilled the input tray / emptied the NG tray."""
+        """Người vận hành đã nạp lại tray Input / dọn trống tray NG."""
         self.post("cmd", "reset_tray", kind)
 
     def reset_flow(self):
-        """Tray flow: the operator cleared every head and box by hand: forget where all products were and start again."""
+        """Người vận hành đã dọn mọi tay hút và box bằng tay: quên vị trí của mọi sản phẩm và bắt đầu lại."""
         self.post("cmd", "reset_flow")
 
     def on_ats_event(self, number, event):
@@ -229,7 +203,7 @@ class Engine:
         self.post("ats_conn", number, connected)
 
     # ------------------------------------------------------------------ #
-    # snapshot for the UI
+    # snapshot cho UI
     # ------------------------------------------------------------------ #
     def snapshot(self):
         with self._lock:
@@ -250,7 +224,6 @@ class Engine:
             return {
                 "run_state": self.run_state, "fault_text": self.fault_text,
                 "fixtures": fixtures,
-                "queue": [(j.kind, j.fixture) for j in self._jobs],
                 "current_job": (self._current.kind, self._current.fixture) if self._current else None,
                 "robot": dict(getattr(self.robot, "last_status", {}) or {}),
                 "robot_link": bool(getattr(self.robot, "connected", False)),
@@ -259,7 +232,7 @@ class Engine:
                 "sink": self.sink.stats() if self.sink else {},
                 "totals": {"total": total, "passed": passed, "yield_pct": (100.0 * passed / total) if total else None},
                 "trays": {kind: t.snapshot() for kind, t in self.trays.items()},
-                "flow": self.flow.snapshot() if self.flow is not None else None,
+                "flow": self.flow.snapshot(),
             }
 
     @staticmethod
@@ -273,7 +246,7 @@ class Engine:
         return f.state
 
     # ------------------------------------------------------------------ #
-    # engine thread
+    # thread engine
     # ------------------------------------------------------------------ #
     def _loop(self):
         last_tick = 0.0
@@ -308,7 +281,7 @@ class Engine:
         elif kind == "cmd":
             getattr(self, "_cmd_" + ev[1])(*ev[2:])
 
-    # ---- commands ------------------------------------------------------- #
+    # ---- lệnh ----------------------------------------------------------- #
     def _cmd_start(self):
         if self.block_reason:
             self._log("error", "không thể bắt đầu: %s" % self.block_reason)
@@ -316,15 +289,15 @@ class Engine:
         if self.run_state == RUN_FAULT:
             self._log("warn", "không thể bắt đầu: hãy xác nhận lỗi trước (%s)" % self.fault_text)
             return
-        if self.flow is not None and not self._prepare_flow():
+        if not self._prepare_flow():
             return
         if not getattr(self.robot, "connected", False):
             self._log("error", "không thể bắt đầu: chưa kết nối bridge robot")
             self.errors.raise_error("9100", "chưa kết nối bridge robot", key="robot_link")
             return
-        refresh = getattr(self.robot, "refresh_program_state", None)     # a stand-in without UO[3] reading: not checked
+        refresh = getattr(self.robot, "refresh_program_state", None)     # đối tượng thay thế không đọc được UO[3]: không kiểm tra
         if refresh is not None:
-            state = refresh()                                              # fresh read of UO[3] PROGRUN
+            state = refresh()                                              # đọc mới UO[3] PROGRUN
             if state is not True:
                 why = ("chương trình robot chưa chạy (UO[3] PROGRUN = 0): hãy bấm 'Chạy chương trình' trước" if state is False
                        else "không đọc được UO[3] PROGRUN")
@@ -346,8 +319,7 @@ class Engine:
         self._log("info", "đã bắt đầu chạy")
         for f in self.fixtures.values():
             if f.dut is None and not f.idle_since:
-                f.idle_since = self._armed_at            # tray flow: every empty box waits from the start
-            self._maybe_queue_load(f)
+                f.idle_since = self._armed_at            # mọi box trống bắt đầu chờ từ lúc này
 
     def _cmd_sync(self, done):
         done.set()
@@ -360,12 +332,11 @@ class Engine:
 
     def _cmd_stop(self):
         self.run_state = STOPPED if self.run_state != RUN_FAULT else RUN_FAULT
-        self._drop_load_jobs()                                          # keep unloads: DUTs must not stay inside
         self.errors.raise_error("9026", "RCS dừng", key="run_stop")
         if self._current is None:
             self._disarm_robot()
         else:
-            self._disarm_after_job = True      # never disarm in the middle of a sequence
+            self._disarm_after_job = True      # không bao giờ disarm giữa chừng một sequence
         self._log("info", "đã dừng chạy")
 
     def _disarm_robot(self):
@@ -385,7 +356,7 @@ class Engine:
         self.errors.clear_error("robot")
         self.fault_text = ""
         self.run_state = PAUSED
-        self._log("info", "đã xác nhận lỗi; hãy kiểm tra cell, đặt lại fixture rồi bấm Bắt đầu")
+        self._log("info", "đã xác nhận lỗi; hãy kiểm tra tay hút và box (nếu cần thì 'Xóa trạng thái luồng') rồi bấm Bắt đầu")
 
     def _cmd_enable(self, number, enabled):
         f = self.fixtures.get(number)
@@ -399,26 +370,9 @@ class Engine:
             f.consec_ng = 0
             if f.state == NO_USED or f.state == OFFLINE:
                 f.state = IDLE
-            self._maybe_queue_load(f)
-        else:
-            self._drop_load_jobs(number)
         self._log("info", "fixture %d %s" % (number, "đã bật" if enabled else "đã tắt"))
 
-    def _drop_load_jobs(self, number=None):
-        """Remove queued 'load' jobs (all, or only those of one fixture) and free their fixtures."""
-        keep = []
-        for j in self._jobs:
-            if j.kind == "load" and (number is None or j.fixture == number):
-                f = self.fixtures[j.fixture]
-                if f.state == WAIT_LOAD:
-                    f.state = IDLE
-            else:
-                keep.append(j)
-        self._jobs = keep
-
     def _cmd_reset_flow(self):
-        if self.flow is None:
-            return
         if self._current is not None:
             self._log("warn", "robot đang làm việc: hãy dừng chạy rồi đợi xong trước khi xóa trạng thái luồng")
             return
@@ -428,11 +382,10 @@ class Engine:
         for f in self.fixtures.values():
             f.dut, f.finished, f.dut_inside, f.sn, f.message = None, False, False, "", ""
             f.idle_since = self.clock()
-            if f.state in (TESTING, RESULT, LOADING, UNLOADING, FAULT, WAIT_LOAD):
+            if f.state in (TESTING, RESULT, LOADING, UNLOADING, FAULT):
                 f.state = IDLE
         for tray in self.trays.values():
             tray.reset()
-        self._tray_warned.clear()
         self.errors.clear_error("robot")
         self._log("info", "đã xóa trạng thái luồng: mọi tay hút và box được coi là trống, tray input đầy, tray NG trống")
 
@@ -440,36 +393,16 @@ class Engine:
         tray = self.trays.get(kind)
         if tray is None:
             return
-        if self.flow is not None:
-            if kind == "input" and self.flow.in_flight():
-                self._log("warn", "còn %d sản phẩm trên tay hút / trong box: không thể đặt lại tray input "
-                                  "(nếu đã dọn tay hết, dùng 'Xóa trạng thái luồng')" % len(self.flow.in_flight()))
-                return
-            self.flow.reset(kind)
-            self.errors.clear_error({"input": "tray_input", "ng": "tray_ng"}.get(kind, "tray_output"))
+        if kind == "input" and self.flow.in_flight():
+            self._log("warn", "còn %d sản phẩm trên tay hút / trong box: không thể đặt lại tray input "
+                              "(nếu đã dọn tay hết, dùng 'Xóa trạng thái luồng')" % len(self.flow.in_flight()))
+            return
+        self.flow.reset(kind)
+        self.errors.clear_error({"input": "tray_input", "ng": "tray_ng"}.get(kind, "tray_output"))
         tray.reset()
-        self._tray_warned.discard(kind)
         self._log("info", "tray %s đã đặt lại (%s)" % (kind, "đã nạp lại" if kind == "input" else "đã dọn trống"))
 
-    def _cmd_reset_fixture(self, number, dut_inside):
-        f = self.fixtures.get(number)
-        if f is None or (self._current and self._current.fixture == number):
-            return
-        if self.flow is not None:
-            self._log("warn", "luồng tray: không đặt lại từng fixture; dùng 'Xóa trạng thái luồng' sau khi đã dọn tay")
-            return
-        f.dut_inside = dut_inside
-        f.message = ""
-        f.state = IDLE
-        self.errors.clear_error("fix_%d" % number)
-        if dut_inside:
-            f.state = RESULT
-            self._queue_job("unload", number, "NG")
-        else:
-            self._maybe_queue_load(f)
-        self._log("info", "fixture %d đã đặt lại (DUT bên trong: %s)" % (number, "có" if dut_inside else "không"))
-
-    # ---- ATS events ----------------------------------------------------- #
+    # ---- sự kiện ATS ---------------------------------------------------- #
     def _on_ats_conn(self, number, connected):
         f = self.fixtures.get(number)
         if f is None:
@@ -490,8 +423,6 @@ class Engine:
             return
         if ev.kind == AP.WAITDUT:
             f.ats_ready = True
-            if not f.dut_inside:
-                self._maybe_queue_load(f)
         elif ev.kind in (AP.BARCODE, AP.BARCODE_PASS):
             f.sn = ev.sn or f.sn
         elif ev.kind == AP.FIX_ERROR:
@@ -527,136 +458,13 @@ class Engine:
             self._log("warn", msg)
             f.consec_ng = 0
             if self.ng_stop:
-                f.enabled = False       # no new DUT; the tested one is still taken out (the old RCS left it inside)
-        if self.flow is not None:
-            self._log("info", self.flow.result(f, label, elapsed, self.fixtures, self.clock())[1])
-            return                                     # the planner takes the product out when the robot is free
-        self._queue_job("unload", f.number, label)
+                f.enabled = False       # không nạp DUT mới; DUT đã test vẫn được lấy ra (RCS cũ để nó lại bên trong)
+        self._log("info", self.flow.result(f, label, elapsed, self.fixtures, self.clock())[1])
+        # planner lấy sản phẩm ra khi robot rảnh
 
-    # ---- jobs ----------------------------------------------------------- #
-    def _maybe_queue_load(self, f):
-        if self.flow is not None:
-            return                                     # the tray flow has its own planner
-        if (self.run_state == RUNNING and f.enabled and f.connected and f.ats_ready and not f.dut_inside
-                and f.state in (IDLE, OFFLINE, NO_USED)
-                and not any(j.fixture == f.number for j in self._jobs)
-                and not (self._current and self._current.fixture == f.number)):
-            self._queue_job("load", f.number)
-
-    def _queue_job(self, kind, number, result=""):
-        self._job_seq += 1
-        self._jobs.append(Job(self._job_seq, kind, number, result))
-        self.fixtures[number].state = WAIT_LOAD if kind == "load" else RESULT
-
-    def _next_job(self):
-        for j in self._jobs:
-            if j.kind == "unload":
-                return j
-        input_tray = self.trays.get("input")
-        no_stock = input_tray is not None and input_tray.exhausted
-        for j in self._jobs:
-            f = self.fixtures[j.fixture]
-            if f.enabled and f.connected and not (j.kind == "load" and no_stock):    # nothing left to load
-                return j
-        return None
-
-    def _dispatch(self):
-        if self.flow is not None:
-            self._dispatch_flow()
-            return
-        if self._current is not None or self.run_state != RUNNING or not self._jobs:
-            return
-        if getattr(self.robot, "program_state", None) is False:
-            return                                                     # no command may be written while the program is off
-        if not getattr(self.robot, "connected", False):
-            return
-        job = self._next_job()
-        if job is None:
-            return
-        self._jobs.remove(job)
-        self._current = job
-        f = self.fixtures[job.fixture]
-        f.state = LOADING if job.kind == "load" else UNLOADING
-        threading.Thread(target=self._run_job, args=(job,), name="job-%d" % job.id, daemon=True).start()
-
-    def _run_job(self, job):
-        f = self.fixtures[job.fixture]
-        variables = {"fixture": f.number, "robot_station": f.robot_station, "station": f.station,
-                     "result": job.result}
-        try:
-            if job.kind == "load":
-                names = ("load",)
-            else:
-                names = UNLOAD_SEQUENCE.get(job.result, ("unload_ng",))
-            name = next((n for n in names if n in self.sequences), None)
-            if name is None:
-                raise SequenceError("no sequence for %s (%s)" % (job.kind, job.result))
-            job.sequence = name
-            self._log("info", "việc robot %d: %s fixture %d (%s)" % (job.id, name, f.number, job.result or "-"))
-            def scanned(code, tool):
-                job.sn = code
-                with self._lock:
-                    f.sn = code
-                self._log("info", "fixture %d: đã đọc mã %s (máy quét của End Effector)" % (f.number, code))
-            self._runner.run(name, self.sequences[name], variables, cancel=self._cancel, on_scan=scanned)
-            self.post("job_done", job.id, True, "")
-        except Exception as ex:
-            self.post("job_done", job.id, False, "%s: %s" % (type(ex).__name__, ex))
-
-    def _on_job_done(self, job_id, ok, error):
-        job, self._current = self._current, None
-        if job is None or job.id != job_id:
-            return
-        if self._disarm_after_job and self.run_state != RUNNING:
-            self._disarm_robot()
-        if job.kind == "flow":
-            self._on_flow_job_done(job, ok, error)
-            return
-        f = self.fixtures[job.fixture]
-        if not ok:
-            f.state, f.message = FAULT, error
-            self.fault_text = "fixture %d %s: %s" % (f.number, {"load": "nạp", "unload": "lấy ra"}.get(job.kind, job.kind), error)
-            self.run_state = RUN_FAULT
-            code = {"ScanError": "9202", "HeadError": "9203", "LaserError": "9204"}.get(error.split(":", 1)[0], "9201")
-            self.errors.raise_error(code, self.fault_text, key="robot")
-            self._log("error", "việc robot thất bại - dừng chạy: %s" % self.fault_text)
-            return
-        self._count_tray(job)
-        if job.kind == "load":
-            f.dut_inside = True
-            f.sn = job.sn                     # "" unless a scan step read the code (the ATS may report it later)
-            if self.auto_start_test:
-                ats = self.ats.get(f.number)
-                if ats is not None and ats.place_dut_ok():
-                    f.state, f.test_started = TESTING, self.clock()
-                else:
-                    f.state, f.message = FAULT, "ATS chưa kết nối: không thể bắt đầu test"
-                    self.errors.raise_error("9012", "ATS %d chưa kết nối" % f.number, key="ats_%d" % f.number)
-            else:
-                f.state = IDLE
-        else:
-            f.dut_inside = False
-            f.state = IDLE
-            if self.send_dut_out and self.ats.get(f.number):
-                self.ats[f.number].dut_out()
-            if self.reload_after_unload:
-                self._maybe_queue_load(f)
-
-    def _count_tray(self, job):
-        """A finished load took a DUT from the input tray; a finished NG unload put one into the NG tray."""
-        kind = "input" if job.kind == "load" else "ng" if job.sequence == "unload_ng" else None
-        tray = self.trays.get(kind)
-        if tray is None:
-            return
-        tray.advance()
-        if tray.exhausted and kind not in self._tray_warned:
-            self._tray_warned.add(kind)
-            self._log("warn", "tray input đã hết hàng: hãy nạp tray rồi bấm 'Nạp lại'" if kind == "input"
-                      else "tray NG đã đầy: hãy dọn tray rồi bấm 'Đã dọn'")
-
-    # ---- tray flow ------------------------------------------------------- #
+    # ---- việc robot (việc của planner) ---------------------------------- #
     def _prepare_flow(self):
-        """Start of a run in the tray flow: every taught point must be there. False (alarm 9205) when something is missing."""
+        """Bắt đầu một lượt chạy: phải có đủ mọi điểm dạy. False (alarm 9205) khi thiếu điểm."""
         missing = self.flow.missing_points(self.points)
         why = ""
         if missing:
@@ -673,24 +481,24 @@ class Engine:
         self.errors.clear_error("flow_layout")
         return True
 
-    def _dispatch_flow(self):
+    def _dispatch(self):
         if self._current is not None or self.run_state != RUNNING or self.flow.layout is None:
             return
         if getattr(self.robot, "program_state", None) is False or not getattr(self.robot, "connected", False):
-            return                                                       # no command may be written while the program is off
+            return                                                       # không được ghi lệnh nào khi chương trình robot đang tắt
         task = self.flow.plan(self.flow.world(self.clock(), self.fixtures))
         if task is None:
             return
         try:
             stages = self.flow.build(task)
-        except Exception as ex:                                          # bad geometry: never send a half-known pose
+        except Exception as ex:                                          # hình học sai: không bao giờ gửi một pose chưa chắc chắn
             self._fail_flow("%s: %s" % (type(ex).__name__, ex), None)
             return
         self._job_seq += 1
         job = Job(self._job_seq, "flow", getattr(task, "fixture", 0) or 0, task=task, stages=stages, sequence=task.kind)
         self._current = job
         f = self.fixtures.get(job.fixture)
-        if f is not None and f.state in (IDLE, RESULT, TESTING, WAIT_LOAD):
+        if f is not None and f.state in (IDLE, RESULT, TESTING):
             f.state = UNLOADING if f.dut is not None else LOADING
         self._log("info", "việc robot %d (%s): %s" % (job.id, task.kind, task.reason))
         threading.Thread(target=self._run_flow_job, args=(job,), name="job-%d" % job.id, daemon=True).start()
@@ -702,12 +510,12 @@ class Engine:
         try:
             for stage in job.stages:
                 if self._cancel.is_set() or self.run_state != RUNNING:
-                    self.post("job_done", job.id, True, "")               # stopped between two stages: the books are exact
+                    self.post("job_done", job.id, True, "")               # dừng giữa hai stage: sổ sách vẫn chính xác
                     return
                 try:
                     self._runner.run(stage.label, stage.steps, {}, cancel=self._cancel, on_scan=scanned)
                 except HeadError as ex:
-                    if stage.kind == "carry":                              # a head that carried a product does not hold it any more
+                    if stage.kind == "carry":                              # tay đang mang sản phẩm mà không còn giữ được nó
                         raise DropError("%s" % ex)
                     raise
                 if stage.commit is not None:
@@ -742,7 +550,12 @@ class Engine:
             if f.state in (LOADING, UNLOADING):
                 f.state = (TESTING if not f.finished else RESULT) if f.dut is not None else IDLE
 
-    def _on_flow_job_done(self, job, ok, error):
+    def _on_job_done(self, job_id, ok, error):
+        job, self._current = self._current, None
+        if job is None or job.id != job_id:
+            return
+        if self._disarm_after_job and self.run_state != RUNNING:
+            self._disarm_robot()
         self._normalise_fixture_states()
         if ok:
             return
@@ -764,12 +577,12 @@ class Engine:
                 self.on_drop(self.fault_text)
             except Exception:
                 log.exception("on_drop failed")
-        self.run_state = RUN_FAULT                          # last: whoever sees the fault also sees its alarm and the stop request
+        self.run_state = RUN_FAULT                          # đặt sau cùng: ai thấy lỗi thì cũng thấy alarm và yêu cầu dừng của nó
 
-    # ---- periodic ------------------------------------------------------- #
+    # ---- định kỳ -------------------------------------------------------- #
     def _watch_program(self, now):
-        """The robot program (UO[3] PROGRUN) stopped during a run (E-stop, cycle stop, fault...): pause with an alarm.
-        It must stay off for a second, so that a single bad reading does not stop the cell."""
+        """Chương trình robot (UO[3] PROGRUN) dừng giữa lúc đang chạy (E-stop, cycle stop, lỗi...): tạm dừng kèm alarm.
+        Nó phải tắt liên tục một giây, để một lần đọc sai không làm dừng cả cell."""
         state = getattr(self.robot, "program_state", None)
         if state is not False:
             self._program_off_since = None
@@ -784,7 +597,7 @@ class Engine:
             self._log("warn", "chương trình robot đã dừng: tạm dừng chạy. Bấm 'Chạy chương trình' rồi 'Bắt đầu'")
 
     def _watch_trays(self):
-        """Tray flow: tell the operator when a tray must be changed."""
+        """Báo cho người vận hành khi cần thay tray."""
         book = self.flow.book
         if book.ng_capacity and book.ng_free == 0:
             if self.errors.raise_error("9207", "tray NG đã đầy: hãy thay / dọn tray NG rồi bấm 'Đã dọn'", key="tray_ng"):
@@ -799,8 +612,7 @@ class Engine:
 
     def _tick(self, now):
         self._watch_program(now)
-        if self.flow is not None:
-            self._watch_trays()
+        self._watch_trays()
         for f in self.fixtures.values():
             if f.state == TESTING and f.test_started and now - f.test_started > self.test_timeout_s:
                 self.errors.raise_error("9010", "Fixture %d: không có kết quả sau %.0fs" % (f.number, now - f.test_started),
@@ -811,5 +623,3 @@ class Engine:
                 self.errors.raise_error("9100", "bridge robot chưa arm (watchdog/lỗi)", key="robot_link")
                 self.run_state = PAUSED
                 self._log("warn", "bridge bị disarm: tạm dừng chạy")
-        for f in self.fixtures.values():
-            self._maybe_queue_load(f)

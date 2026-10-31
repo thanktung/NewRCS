@@ -1,28 +1,27 @@
-"""The tray flow as the engine uses it: settings, books, layout, planner and stage builder in one object.
+"""Luồng tray theo cách engine dùng: cài đặt, sổ sách, layout, planner và bộ dựng stage gộp trong một đối tượng.
 
-Enabled by settings.json -> "flow" -> "mode": "tray" (the default "classic" keeps the old one-sequence-per-fixture behaviour):
+Đây là cách NewRCS chạy (chế độ "classic" cũ, mỗi fixture một sequence, đã bị bỏ). settings.json -> "flow":
 
     "flow": {
-      "mode": "tray",
-      "max_attempts": 3,            tests per product, every one in a different box (then it goes to the NG tray)
-      "keep_free_heads": 1,         heads kept free so that a tested product can be taken out of a box
-      "max_pick": 8, "max_sort": 8, how many products one visit to the tray fetches / puts away (keeps a visit short)
-      "pick_ahead": 0,              extra products fetched beyond the boxes that wait
-      "top_up_when_idle": true,     fetch products while every box is busy
-      "fill_heads": true,           at the tray fill ALL free heads (keep_free stay free): fewer trips between the tray and the boxes
-      "scan": true,                 read the barcode of every product before it is picked (needs end_effector.scanner)
-      "override": null,             speed (%) of the moves; null = bridge.default_override
-      "check_timeout_s": 1.0,       time given to the pressure sensors after a pick / release
+      "max_attempts": 3,            số lần test mỗi sản phẩm, mỗi lần ở một box khác (sau đó vào tray NG)
+      "keep_free_heads": 1,         số tay để trống để có thể lấy hàng đã test ra khỏi box
+      "max_pick": 8, "max_sort": 8, số sản phẩm một lần tới tray được lấy / cất (giữ cho mỗi lần tới tray ngắn)
+      "pick_ahead": 0,              số sản phẩm lấy thêm ngoài số box đang chờ
+      "top_up_when_idle": true,     lấy hàng khi mọi box đều đang bận
+      "fill_heads": true,           tới tray thì nạp đầy MỌI tay trống (trừ keep_free): ít chuyến đi lại giữa tray và box hơn
+      "scan": true,                 đọc mã vạch từng sản phẩm trước khi hút (cần end_effector.scanner)
+      "override": null,             tốc độ (%) của các lần di chuyển; null = bridge.default_override
+      "check_timeout_s": 1.0,       thời gian cho cảm biến áp suất sau khi hút / nhả
       "laser_check": {"enabled": true, "places": ["box", "output"], "offsets": [[-15, 0, 0], [15, 0, 0]], "timeout_s": 1.0},
-                                    after a product is PUT DOWN (in a box / a tray) the IL-1000 laser is moved over 2 measuring points
-                                    (offsets in mm in the frame of the place) and must say GO at both, otherwise the product is tilted
-      "stop_robot_on_drop": true,   a head that lost its product on the way: stop the run AND the robot program, alarm 9208
-      "via_tray": "", "via_fixtures": ""   optional taught points the robot passes through when it goes to the tray / to the boxes
+                                    sau khi ĐẶT XUỐNG một sản phẩm (vào box / tray) đầu laser IL-1000 được đưa qua 2 điểm đo
+                                    (offsets tính bằng mm trong hệ tọa độ của chỗ đặt) và phải báo GO ở cả hai, nếu không thì sản phẩm bị nghiêng
+      "stop_robot_on_drop": true,   một tay đánh rơi sản phẩm trên đường đi: dừng chạy VÀ dừng chương trình robot, alarm 9208
+      "via_tray": "", "via_fixtures": ""   điểm dạy tùy chọn robot đi qua khi tới tray / tới các box
     }
 
-The engine owns one FlowController. It asks `plan()` for the next task whenever the robot is free, runs the stages `build()` made, and
-calls `commit()` as every stage finishes. Where everything is lives in `book` (dut.DutBook), the poses come from `layout` (geometry.Layout),
-built from the taught points when a run starts, so points taught meanwhile are used.
+Engine sở hữu một FlowController. Mỗi khi robot rảnh, engine gọi `plan()` lấy việc tiếp theo, chạy các stage do `build()` tạo, và
+gọi `commit()` khi từng stage xong. Vị trí của mọi thứ nằm trong `book` (dut.DutBook), các pose lấy từ `layout` (geometry.Layout),
+được dựng từ các điểm dạy lúc bắt đầu chạy, nên điểm vừa dạy cũng được dùng.
 """
 from dataclasses import dataclass
 
@@ -32,14 +31,13 @@ from .planner import FixtureView, Planner, PlannerConfig, World
 from .states import IDLE, TESTING
 from .tasks import BuildSettings, StageBuilder
 
-MODES = ("classic", "tray")
 LASER_PLACES = ("box", "input", "output", "ng")
-# what a head holds, as the screen shows it: empty | fresh (not tested yet) | pass | ng | retest (failed, to be tested in another box)
+# tay đang cầm gì, theo cách màn hình hiển thị: empty | fresh (chưa test) | pass | ng | retest (đã hỏng, sẽ test ở box khác)
 HEAD_STATE = {D.TEST: "fresh", D.RETEST: "retest", D.RETURN: "pass", D.NG: "ng"}
 
 
 class FlowError(Exception):
-    """Bad flow settings (reported when the program starts)."""
+    """Cài đặt flow sai (báo lúc chương trình khởi động)."""
 
 
 def _int(value, name, low, high):
@@ -50,7 +48,6 @@ def _int(value, name, low, high):
 
 @dataclass
 class FlowSettings:
-    mode: str = "classic"
     max_attempts: int = 3
     keep_free: int = 1
     max_pick: int = 8
@@ -63,26 +60,22 @@ class FlowSettings:
     check_timeout_s: float = 1.0
     via_tray: str = ""
     via_fixtures: str = ""
-    laser: bool = False                                  # check every product that is put down with the IL-1000 (needs end_effector.laser)
-    laser_places: tuple = ("box", "input", "output")     # where: box | input (tray) | output (trays) | ng (tray)
-    laser_offsets: tuple = ((-15.0, 0.0, 0.0), (15.0, 0.0, 0.0))     # the measuring points (x, y, z mm in the frame of the place)
+    laser: bool = False                                  # kiểm tra bằng IL-1000 mọi sản phẩm được đặt xuống (cần end_effector.laser)
+    laser_places: tuple = ("box", "input", "output")     # ở đâu: box | input (tray) | output (các tray) | ng (tray)
+    laser_offsets: tuple = ((-15.0, 0.0, 0.0), (15.0, 0.0, 0.0))     # các điểm đo (x, y, z mm trong hệ tọa độ của chỗ đặt)
     laser_timeout_s: float = 1.0
     stop_robot_on_drop: bool = True
 
     @classmethod
     def from_config(cls, cfg, heads):
         f = cfg.get("flow") or {}
-        mode = f.get("mode", "classic")
-        if mode not in MODES:
-            raise FlowError("flow.mode must be one of %s (got %r)" % (", ".join(MODES), mode))
-        s = cls(mode=mode)
-        if mode == "classic":
-            return s
-        if heads < 2:       # swapping a tested product for a fresh one needs a free head AND a loaded head
-            raise FlowError("flow.mode 'tray' needs at least 2 heads in end_effector.heads.units (found %d)" % heads)
-        d = cls()
+        if f.get("mode", "tray") != "tray":            # settings.json cũ có thể vẫn ghi tên chế độ đã bỏ
+            raise FlowError("flow.mode %r is not supported any more: only the tray flow exists (delete flow.mode)" % (f.get("mode"),))
+        if heads < 2:       # đổi hàng đã test lấy hàng mới cần một tay trống VÀ một tay đang cầm hàng
+            raise FlowError("the tray flow needs at least 2 heads in end_effector.heads.units (found %d)" % heads)
+        s, d = cls(), cls()                             # d: giá trị mặc định
         s.max_attempts = _int(f.get("max_attempts", d.max_attempts), "max_attempts", 1, 10)
-        s.keep_free = min(_int(f.get("keep_free_heads", d.keep_free), "keep_free_heads", 0, 64), max(0, heads - 1))   # at most heads - 1
+        s.keep_free = min(_int(f.get("keep_free_heads", d.keep_free), "keep_free_heads", 0, 64), max(0, heads - 1))   # tối đa số tay - 1
         s.max_pick = min(_int(f.get("max_pick", d.max_pick), "max_pick", 1, 64), heads)
         s.max_sort = min(_int(f.get("max_sort", d.max_sort), "max_sort", 1, 64), heads)
         s.pick_ahead = min(_int(f.get("pick_ahead", d.pick_ahead), "pick_ahead", 0, 64), heads)
@@ -120,12 +113,12 @@ class FlowSettings:
 
 class FlowController:
     def __init__(self, settings: FlowSettings, trays, fixtures, heads, has_scanner, default_override=None, engine_cfg=None):
-        """`trays` = {"input": {"rows", "cols"}, "ng": {...}}; `fixtures` = fixture numbers; `heads` = number of heads."""
+        """`trays` = {"input": {"rows", "cols"}, "ng": {...}}; `fixtures` = số các fixture; `heads` = số tay hút."""
         if "input" not in (trays or {}) or "ng" not in (trays or {}):
-            raise FlowError("flow.mode 'tray' needs both trays in settings.json -> trays (input and ng)")
+            raise FlowError("the tray flow needs both trays in settings.json -> trays (input and ng)")
         self.s = settings
         self.trays, self.fixture_numbers, self.heads, self.scanner = trays, sorted(fixtures), heads, has_scanner and settings.scan
-        self.laser = settings.laser                      # the engine has checked that the End Effector carries an enabled laser
+        self.laser = settings.laser                      # engine đã kiểm tra End Effector có laser đang bật
         self.default_override = default_override
         self.engine_cfg = engine_cfg or {}
         self.planner = Planner(PlannerConfig(keep_free=settings.keep_free, max_pick=settings.max_pick, max_sort=settings.max_sort,
@@ -140,18 +133,18 @@ class FlowController:
         outs = [t[n]["rows"] * t[n]["cols"] for n in G.Layout.output_names(t)]
         return D.DutBook(t["input"]["rows"] * t["input"]["cols"], self.s.max_attempts, t["ng"]["rows"] * t["ng"]["cols"], outs)
 
-    # ---- layout / books ---------------------------------------------------------------------------- #
+    # ---- layout / sổ sách ---------------------------------------------------------------------------- #
     def missing_points(self, points):
         return G.Layout.missing(points, self.trays, self.fixture_numbers, self.heads, self.scanner, self.laser)
 
     def prepare(self, points):
-        """Build the layout from the taught points (raises geometry.GeometryError listing what is missing / inconsistent)."""
+        """Dựng layout từ các điểm dạy (ném geometry.GeometryError liệt kê điểm thiếu / không khớp)."""
         self.layout = G.Layout(points, self.trays, self.fixture_numbers, self.heads, self.scanner, self.laser)
 
     def reset(self, what="all"):
-        """New books. what = "input": the operator put a new input tray (the other trays keep their counts); "ng": the NG tray was emptied;
-        "output1" / "output2": that output tray was emptied; "all": everything was cleared by hand (input tray full, the other trays
-        empty, heads and boxes empty)."""
+        """Sổ sách mới. what = "input": người vận hành đặt tray Input mới (các tray khác giữ số đếm); "ng": tray NG đã được dọn;
+        "output1" / "output2": tray output đó đã được dọn; "all": mọi thứ đã được dọn bằng tay (tray Input đầy, các tray khác
+        trống, tay hút và box trống)."""
         if what == "ng":
             self.book.ng_used = 0
             return
@@ -167,10 +160,10 @@ class FlowController:
         self.sn_by_cell = {}
 
     def in_flight(self):
-        """Products that are on a head or in a box (a refill of the input tray would lose track of them)."""
+        """Các sản phẩm đang ở trên tay hút hoặc trong box (nạp lại tray Input lúc này sẽ làm mất dấu chúng)."""
         return [d for d in self.book.active()]
 
-    # ---- planning ------------------------------------------------------------------------------------ #
+    # ---- lập kế hoạch -------------------------------------------------------------------------------- #
     def world(self, now, fixtures):
         views = [FixtureView(f.number, f.enabled, f.connected, f.ats_ready, f.dut, f.finished, f.idle_since)
                  for f in fixtures.values()]
@@ -194,9 +187,9 @@ class FlowController:
                            laser_offsets=s.laser_offsets, laser_timeout_s=s.laser_timeout_s)
         return StageBuilder(self.layout, self.book, bs).build(task)
 
-    # ---- the books follow the robot ------------------------------------------------------------------ #
+    # ---- sổ sách đi theo robot ------------------------------------------------------------------------ #
     def commit(self, c, fixtures, now):
-        """Apply what a finished stage did. `fixtures` = the engine's Fixture objects. Returns a short text for the log."""
+        """Ghi nhận việc một stage vừa làm xong. `fixtures` = các đối tượng Fixture của engine. Trả về một câu ngắn cho log."""
         op, book = c["op"], self.book
         if op == "sn":
             self.sn_by_cell[int(c["tag"].split(":")[1])] = c["sn"]
@@ -232,7 +225,7 @@ class FlowController:
         raise D.DutError("unknown commit %r" % (c,))
 
     def result(self, f, label, elapsed, fixtures, now):
-        """A test finished in box `f`. Returns (verdict, text) - verdict: "PASS", "RETEST" (test again in another box) or "NG" (final)."""
+        """Box `f` vừa test xong. Trả về (verdict, text) - verdict: "PASS", "RETEST" (test lại ở box khác) hoặc "NG" (kết luận cuối)."""
         d = f.dut
         eligible = [x.number for x in fixtures.values() if x.enabled and x.connected and x.ats_ready]
         verdict = self.book.result(d, label, elapsed, eligible)
@@ -252,7 +245,7 @@ class FlowController:
             d = b.on_head(k)
             heads.append({"head": k, "state": HEAD_STATE.get(d.need, "fresh") if d else "empty", "dut": d.id if d else None,
                           "cell": d.origin if d else None, "sn": d.sn if d else "", "tests": d.tests_made if d else 0})
-        # input tray: "fresh" (not tested) | "empty" | "pass" per cell;  NG tray: the first `ng_used` cells hold an NG product
+        # tray Input: mỗi ô "fresh" (chưa test) | "empty" | "pass";  tray NG: `ng_used` ô đầu tiên chứa sản phẩm NG
         return {"mode": "tray", "heads": heads, "input_cells": list(b.cells), "ng_used": b.ng_used, "out_used": list(b.out_used),
                 "out_capacity": list(b.out_capacity), "stats": b.stats(),
                 "reason": self.planner.reason, "max_attempts": b.max_attempts}

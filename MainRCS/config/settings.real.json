@@ -34,19 +34,19 @@
     "connect_timeout_s": 3.0,
     "retry_s": 2.0,
     "fixtures": {
-      "1": {"host": "192.168.5.6", "port": 8801, "station": "Station1", "robot_station": 1},
-      "2": {"host": "192.168.5.6", "port": 8802, "station": "Station1", "robot_station": 2},
-      "3": {"host": "192.168.5.6", "port": 8803, "station": "Station1", "robot_station": 3},
-      "4": {"host": "192.168.5.6", "port": 8804, "station": "Station1", "robot_station": 4},
-      "5": {"host": "192.168.5.6", "port": 8805, "station": "Station1", "robot_station": 5},
-      "6": {"host": "192.168.5.6", "port": 8806, "station": "Station1", "robot_station": 6},
-      "7": {"host": "192.168.5.6", "port": 8807, "station": "Station1", "robot_station": 7},
-      "8": {"host": "192.168.5.6", "port": 8808, "station": "Station1", "robot_station": 8},
-      "9": {"host": "192.168.5.6", "port": 8809, "station": "Station1", "robot_station": 9},
-      "10": {"host": "192.168.5.6", "port": 8810, "station": "Station1", "robot_station": 10},
-      "11": {"host": "192.168.5.6", "port": 8811, "station": "Station1", "robot_station": 11},
-      "12": {"host": "192.168.5.6", "port": 8812, "station": "Station1", "robot_station": 12},
-      "13": {"host": "192.168.5.6", "port": 8813, "station": "Station1", "robot_station": 13}
+      "1": {"host": "10.164.125.10", "port": 8888, "station": "Station1", "robot_station": 1},
+      "2": {"host": "10.164.125.9",  "port": 8888, "station": "Station1", "robot_station": 2},
+      "3": {"host": "10.164.125.2",  "port": 8888, "station": "Station1", "robot_station": 3},
+      "4": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 4},
+      "5": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 5},
+      "6": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 6},
+      "7": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 7},
+      "8": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 8},
+      "9": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 9},
+      "10": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 10},
+      "11": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 11},
+      "12": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 12},
+      "13": {"host": "10.164.125.3",  "port": 8888, "station": "Station1", "robot_station": 13}
     }
   },
 
@@ -72,7 +72,7 @@
 
     "scanner": {
       "_note": "Keyence SR-710 / SR-X100. type: tcp (host + port 9004) hoặc serial (port COMx + baud). length: độ dài mã (0 = không kiểm tra). pattern: regex mã phải khớp. retry: số lần thử thêm. Dùng bởi bước {\"ee\": \"scanner\"}. SỬA host/port cho đúng máy quét thật.",
-      "type": "tcp", "host": "192.168.5.6", "port": 9004, "model": "SR-X100",
+      "type": "tcp", "host": "192.168.1.50", "port": 9004, "model": "SR-X100",
       "length": 0, "pattern": "", "retry": 2, "timeout_s": 3.0
     },
 
@@ -89,25 +89,14 @@
     "ng":    {"rows": 10, "cols": 20}
   },
 
-  "flow": {
-    "_note": "CHẾ ĐỘ CHẠY CHÍNH: tray = robot phục vụ TẤT CẢ box bằng TẤT CẢ tay hút. Lấy hàng chưa test từ tray Input (tọa độ ô tính từ 3 điểm O, X, Y, đủ 6 giá trị), đổi hàng ở box test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. SỐ TAY HÚT = số phần tử của end_effector.heads.units (tối thiểu 2): thêm / bớt một phần tử, dạy điểm head_k_at_O tương ứng rồi khởi động lại. Đổi mode về classic để quay lại chế độ cũ (sequence load / unload_*). Các điểm phải dạy: head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray).",
-    "mode": "tray",
-    "max_attempts": 3,
-    "keep_free_heads": 1,
-    "max_pick": 8, "max_sort": 8, "pick_ahead": 0, "top_up_when_idle": true,
-    "scan": true, "override": null, "check_timeout_s": 1.0,
-    "via_tray": "", "via_fixtures": ""
-  },
-
   "robot_start": {
     "_note": "Khởi động chương trình robot qua tín hiệu UOP (UI map sang SDI cùng chỉ số). rsr = chương trình RSR (1 -> RSR0001, chọn bằng xung UI9). Trình tự: bật SDI1-3 và SDI8, xung SDI9, xung SDI5 (reset) rồi đọc UO6 FAULT, xung SDI6 (start) rồi đọc UO3 PROGRUN. pulse_s = độ rộng xung; reset_wait_s / run_wait_s / stop_wait_s = thời gian chờ UO6 về 0 / UO3 lên 1 / UO3 về 0. Dừng robot: xung SDI4 (CSTOPI), tắt SDI1-3, kiểm tra UO3 = 0. Cần bridge cho ghi loại SDI (io_write_kinds).",
-    "rsr": 1, "pulse_s": 1, "reset_wait_s": 3.0, "run_wait_s": 5.0, "stop_wait_s": 3.0, "poll_s": 0.1, "monitor_s": 0.5
+    "rsr": 1, "pulse_s": 1, "reset_wait_s": 3.0, "run_wait_s": 5.0, "stop_wait_s": 3.0, "poll_s": 0.1
   },
 
   "consecutive_ng": {"limit": 3, "stop_fixture": true},
 
   "engine": {
-    "reload_after_unload": true,
     "auto_start_test": true,
     "send_dut_out": false,
     "test_timeout_s": 300,

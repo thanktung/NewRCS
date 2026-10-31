@@ -5,6 +5,7 @@ import unittest
 
 from tests.support import bridge as helpers
 from rcs2.config import DEFAULTS, load_settings
+from rcs2.core import geometry as G
 from rcs2.core.sequence import load_sequences, validate
 
 ROOT = helpers.ROOT
@@ -31,12 +32,14 @@ class ExampleFilesTest(unittest.TestCase):
         self.assertEqual(cfg["trays"]["input"], {"rows": 5, "cols": 8})   # tray sizes live in the settings file only
         self.assertEqual(cfg["trays"]["ng"], {"rows": 4, "cols": 6})
 
-    def test_sequences_example(self):
+    def test_sequences_example_has_every_point_the_tray_flow_needs(self):
+        cfg = load_settings(os.path.join(ROOT, "config", "settings.example.json"))
         data = load_sequences(os.path.join(ROOT, "config", "sequences.example.json"))
         self.assertTrue(data["example"])
-        validate(data["sequences"], data["points"])
-        for name in ("load", "unload_pass", "unload_ng"):
-            self.assertIn(name, data["sequences"])
+        validate({}, data["points"])
+        heads = len(cfg["end_effector"]["heads"]["units"])
+        fixtures = [int(n) for n in cfg["ats"]["fixtures"]]
+        self.assertEqual(G.Layout.missing(data["points"], cfg["trays"], fixtures, heads, True, True), [])
 
 
 if __name__ == "__main__":

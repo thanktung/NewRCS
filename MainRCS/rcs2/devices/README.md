@@ -7,7 +7,7 @@ Robot chỉ có **MỘT End Effector**, trên đó có các tool nhỏ, mỗi to
 | `heads` | `heads.py` | 8 cụm hút: van chân không + xy lanh lên/xuống + cảm biến áp suất | I/O của controller FANUC qua bridge (`io.read` / `io.write`) |
 | `scanner` | `scanner.py` | đầu đọc mã Keyence SR-710 / SR-X100 | TCP hoặc cổng COM trực tiếp từ PC |
 | `laser` | `laser.py` | IL-1000: phán định GO / HIGH / LOW | đọc I/O qua bridge (mới chỉ đọc phán định) |
-| (gộp) | `end_effector.py` | `EndEffector`, `build_end_effector(settings, io)`, `capabilities()` dùng để kiểm tra sequence | — |
+| (gộp) | `end_effector.py` | `EndEffector`, `build_end_effector(settings, io)`, `capabilities()` cho biết End Effector có tool nào | — |
 
 Không import module nào khác của `rcs2`. `io` được **đưa vào** (`BridgeClient`), nên test dùng I/O giả.
 

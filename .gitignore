@@ -1,7 +1,9 @@
 __pycache__/
 *.pyc
 .venv/
+.venv314/
 .env
+venv/
 bridge32/logs/
 bridge32/bridge_config.json
 logs/

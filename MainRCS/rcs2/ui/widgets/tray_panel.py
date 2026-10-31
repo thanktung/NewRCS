@@ -40,7 +40,7 @@ class TrayView(QtWidgets.QWidget):
         super().__init__()
         self.kind = kind
         self._snap = None
-        self._colors = None                 # tray flow: {cell index: state}; None = the classic counter display
+        self._colors = None                 # tray flow: {cell index: state}; None = plain counter display (no flow data)
         # The tab area of the main window has ONE fixed size for every tab, so the view must not ask for room (its size hint would push the
         # area around): it takes what it is given and the cells shrink to fit (cell_size), at most MAX_CELL px each.
         self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)

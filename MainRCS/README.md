@@ -7,7 +7,7 @@ và với **ATS** của từng fixture qua TCP. Tổng quan sản phẩm: `../RE
 | Thư mục | Vai trò | Đọc thêm |
 |---|---|---|
 | `rcs2/config/` | giá trị mặc định + nạp `settings.json` | [README](rcs2/config/README.md) |
-| `rcs2/core/` | **bộ não**: engine lịch chạy, sequence, tray | [README](rcs2/core/README.md) |
+| `rcs2/core/` | **bộ não**: engine, luồng tray (planner, stage), sequence runner, tray | [README](rcs2/core/README.md) |
 | `rcs2/robot/` | client bridge, giao thức, chạy/dừng chương trình robot (UOP) | [README](rcs2/robot/README.md) |
 | `rcs2/ats/` | giao thức + client ATS của fixture, ATS giả | [README](rcs2/ats/README.md) |
 | `rcs2/devices/` | End Effector: đầu hút, máy quét, laser | [README](rcs2/devices/README.md) |
@@ -50,9 +50,11 @@ Muốn thêm một phụ thuộc mới: sửa bảng `ALLOWED` trong `tests/test
 | Muốn... | Vào |
 |---|---|
 | Đổi IP/cổng fixture, bridge, scanner; đổi kích thước tray; bật MySQL | `config/settings.json` ([giải thích](config/README.md)) |
-| Đổi đường đi của robot, thêm bước (hút, quét mã...) | `config/sequences.json` ([cú pháp](rcs2/core/README.md)) |
+| Đổi điểm robot (dạy lại) | cửa sổ Thủ công → **Hiệu chuẩn luồng tray** (lưu vào `config/sequences.json`) |
+| Đổi trình tự robot trong một việc (hút, quét mã, laser...) | `rcs2/core/tasks.py` ([bảng](rcs2/core/README.md)) |
 | Đổi mức quyền / thêm bộ phận | `config/departments.json` |
-| Đổi khi nào nạp / lấy DUT, xử lý kết quả, alarm | `rcs2/core/engine.py` |
+| Đổi robot làm việc gì tiếp theo | `rcs2/core/planner.py` |
+| Đổi xử lý kết quả, alarm | `rcs2/core/engine.py` |
 | Thêm loại bước sequence | `rcs2/core/sequence.py` |
 | Thêm lệnh vào bridge / đổi giao thức robot | `bridge32/bridge_simple.py` + `rcs2/robot/` |
 | Đổi trình tự chạy / dừng chương trình robot (UOP) | `rcs2/robot/uop.py` |
@@ -90,11 +92,11 @@ python ..\devtools\ui_preview\contract_test.py     # sau khi sửa giao diện
 
 ## Quy ước
 - **Comment trong code bằng tiếng Anh**; chữ hiển thị cho người dùng bằng tiếng Việt.
-- **Dữ liệu thay vì code**: thứ gì đổi theo nhà máy (IP, địa chỉ I/O, kích thước tray, điểm robot, sequence) nằm trong `config/`, không nằm trong code.
+- **Dữ liệu thay vì code**: thứ gì đổi theo nhà máy (IP, địa chỉ I/O, kích thước tray, điểm robot) nằm trong `config/`, không nằm trong code.
 - Mỗi module tự kiểm tra cấu hình của mình **lúc khởi động** và báo lỗi rõ ràng.
 - **Bất biến an toàn (xuyên suốt, đừng phá):**
   1. Không ghi lệnh robot (R[1]) khi chương trình robot dừng (UO[3] = 0).
-  2. Chuyển động chỉ khi đã `arm`; chỉ một client arm; không disarm giữa chừng một sequence.
+  2. Chuyển động chỉ khi đã `arm`; chỉ một client arm; không disarm giữa chừng một việc robot.
   3. **Dừng robot luôn được phép**, không bị khóa bởi trạng thái chạy.
   4. Bridge không thể dừng một chuyển động đang chạy: luôn để E-stop trong tầm tay, thử với override thấp.
   5. Dữ liệu báo cáo ghi outbox trước; không bao giờ chặn máy vì mạng / DB.

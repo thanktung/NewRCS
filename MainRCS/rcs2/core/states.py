@@ -1,7 +1,7 @@
-"""State names shared by the engine and the tray flow (kept apart so that both can import them without a cycle)."""
+"""Tên trạng thái dùng chung cho engine và luồng tray (để riêng để cả hai import được mà không bị import vòng)."""
 
-# fixture states shown in the UI
-NO_USED, OFFLINE, IDLE, WAIT_LOAD, LOADING, TESTING, RESULT, UNLOADING, FAULT = (
-    "No Used", "Offline", "Idle", "Wait load", "Loading", "Testing", "Result", "Unloading", "Fault")
+# trạng thái fixture hiển thị trên UI
+NO_USED, OFFLINE, IDLE, LOADING, TESTING, RESULT, UNLOADING, FAULT = (
+    "No Used", "Offline", "Idle", "Loading", "Testing", "Result", "Unloading", "Fault")
 
 STOPPED, RUNNING, PAUSED, RUN_FAULT = "STOPPED", "RUNNING", "PAUSED", "FAULT"

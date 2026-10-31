@@ -1,4 +1,4 @@
-"""Loading config/settings.json over DEFAULTS, plus the small helpers that depend on the settings / environment."""
+"""Nạp config/settings.json đè lên DEFAULTS, cùng vài hàm nhỏ phụ thuộc vào cài đặt / môi trường."""
 import copy
 import json
 import os
@@ -35,7 +35,7 @@ def load_settings(path=None):
 
 
 def detect_local_ip(prefix="10."):
-    """First local IPv4 address starting with `prefix` ('' if none) - same rule as the old app."""
+    """Địa chỉ IPv4 cục bộ đầu tiên bắt đầu bằng `prefix` ('' nếu không có) - cùng quy tắc với chương trình cũ."""
     try:
         for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
             if ip.startswith(prefix):

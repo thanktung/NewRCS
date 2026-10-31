@@ -1,12 +1,12 @@
-"""The End Effector: the single tool carried by the robot flange.
+"""End Effector: dụng cụ duy nhất gắn trên mặt bích robot.
 
-A robot has exactly ONE End Effector. It carries small tools, each optional:
+Robot có đúng MỘT End Effector. Trên nó có các tool nhỏ, mỗi tool đều tùy chọn:
 
-    heads     N suction units (8 on the real tool): vacuum valve + up/down cylinder + pressure sensor   (devices/heads.py)
-    scanner   barcode reader (Keyence SR-710 / SR-X100) that reads the DUT code before it is picked        (devices/scanner.py)
-    laser     IL-1000 laser sensor that checks the picked DUT                                              (devices/laser.py)
+    heads     N cụm hút (8 trên tool thật): van hút + xy lanh lên/xuống + cảm biến áp suất         (devices/heads.py)
+    scanner   đầu đọc mã vạch (Keyence SR-710 / SR-X100) đọc mã DUT trước khi hút                 (devices/scanner.py)
+    laser     cảm biến laser IL-1000 kiểm tra DUT đã đặt                                         (devices/laser.py)
 
-settings.json -> "end_effector" declares them (see config/settings.example.json):
+settings.json -> "end_effector" khai báo chúng (xem config/settings.example.json):
 
     "end_effector": {
       "name": "End Effector",
@@ -15,7 +15,7 @@ settings.json -> "end_effector" declares them (see config/settings.example.json)
       "laser":   {"enabled": false, "ok": "RDI[20]"}
     }
 
-Sequences address a tool with one step:  {"ee": "heads" | "scanner" | "laser", ...}  (see rcs2/core/sequence.py).
+Một bước sequence gọi một tool:  {"ee": "heads" | "scanner" | "laser", ...}  (xem rcs2/core/sequence.py).
 """
 from .heads import HeadBank, HeadError
 from .laser import Laser, LaserError
@@ -27,18 +27,18 @@ TOOLS = ("heads", "scanner", "laser")
 class EndEffector:
     def __init__(self, heads=None, scanner=None, laser=None, name="End Effector"):
         self.name = name
-        self.heads = heads              # HeadBank-like or None
-        self.scanner = scanner          # KeyenceScanner-like or None
-        self.laser = laser              # Laser-like or None
+        self.heads = heads              # giống HeadBank hoặc None
+        self.scanner = scanner          # giống KeyenceScanner hoặc None
+        self.laser = laser              # giống Laser hoặc None
 
     def tool(self, kind):
-        """The tool object, or None when this End Effector does not carry it."""
+        """Đối tượng tool, hoặc None khi End Effector này không có tool đó."""
         if kind not in TOOLS:
             raise KeyError(kind)
         return getattr(self, kind)
 
     def capabilities(self):
-        """{"heads": number of heads (0 = none), "scanner": bool, "laser": bool} - used to validate sequences."""
+        """{"heads": số tay hút (0 = không có), "scanner": bool, "laser": bool} - cho biết End Effector có tool nào."""
         return {"heads": self.heads.count if self.heads is not None else 0,
                 "scanner": self.scanner is not None, "laser": self.laser is not None}
 
@@ -48,8 +48,8 @@ class EndEffector:
 
 
 def build_end_effector(settings, io, serial_factory=None):
-    """settings['end_effector'] -> EndEffector (an empty one when nothing is declared).
-    Raises HeadError / ScanError / LaserError for a bad entry."""
+    """settings['end_effector'] -> EndEffector (rỗng khi không khai báo gì).
+    Ném HeadError / ScanError / LaserError khi một mục khai báo sai."""
     cfg = settings.get("end_effector") or {}
     heads = HeadBank.from_config(cfg["heads"], io) if cfg.get("heads") else None
     scanner = KeyenceScanner.from_config("scanner", cfg["scanner"], serial_factory) if cfg.get("scanner") else None

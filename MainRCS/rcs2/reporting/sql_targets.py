@@ -1,16 +1,16 @@
-"""MySQL table names / DDL / INSERT statements, identical to the old RCS (Produce.cs "DataBase").
+"""Tên bảng / DDL / câu INSERT của MySQL, giống hệt RCS cũ (Produce.cs "DataBase").
 
-Keeping the legacy layout means the existing dashboard keeps working without changes.
+Giữ nguyên bố cục cũ nên dashboard hiện có vẫn chạy mà không phải sửa.
 
-kind          table name
-error         {Model}_{stations joined by _}_{ip with _}_Y{year}_M{month}
+kind          tên bảng
+error         {Model}_{stations nối bằng _}_{ip với _}_Y{year}_M{month}
 login         LoginLog_{Model}_{stations}_{ip}_Y{year}_M{month}
 result        TestResult_{Model}_{stations}_{ip}_Y{year}_M{month}
 ats_hourly    ATSHourlyIDE_{Model}_{stations}_{ip}_Y{year}_M{month}
-robot_speed   RobotSpeed_{Model}_{stations}_{ip}            (no month suffix)
+robot_speed   RobotSpeed_{Model}_{stations}_{ip}            (không có hậu tố tháng)
 
-The month always comes from the event's own timestamp (not from "now"), so rows that sit in the
-outbox for a while still land in the right monthly table.
+Tháng luôn lấy từ thời điểm của chính sự kiện (không phải "bây giờ"), nên các dòng nằm trong
+outbox một thời gian vẫn vào đúng bảng của tháng đó.
 """
 from datetime import datetime
 
@@ -29,14 +29,14 @@ class SqlTargets:
         self.stations = list(stations)
         self.ip = local_ip
 
-    # ---- names ---------------------------------------------------------- #
+    # ---- tên ------------------------------------------------------------ #
     @property
     def _base(self):
         return "%s_%s_%s" % (self.model, "_".join(self.stations), self.ip.replace(".", "_"))
 
     @property
     def station_label(self):
-        """Value of the 'Station' column of the error table."""
+        """Giá trị cột 'Station' của bảng lỗi."""
         return "%s_%s" % (self.model, "_".join(self.stations))
 
     def table(self, kind, when):
@@ -61,7 +61,7 @@ class SqlTargets:
                "ats_hourly": "update_time", "robot_speed": "update_time"}[kind]
         return _ts(payload[key])
 
-    # ---- statements ----------------------------------------------------- #
+    # ---- câu lệnh ------------------------------------------------------- #
     @staticmethod
     def ddl(kind, table):
         cols = {
@@ -76,7 +76,7 @@ class SqlTargets:
         return "CREATE TABLE IF NOT EXISTS `%s` (id INT AUTO_INCREMENT PRIMARY KEY, %s)" % (table, cols)
 
     def insert(self, kind, table, payload):
-        """-> (sql with %s placeholders, params tuple)."""
+        """-> (sql có chỗ giữ %s, tuple tham số)."""
         p = payload
         if kind == "error":
             return ("INSERT INTO `%s` (Station, ErrorCode, Error, Start_Time, End_Time) "

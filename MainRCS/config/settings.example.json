@@ -88,8 +88,7 @@
   },
 
   "flow": {
-    "_note": "Cách robot phục vụ các box. classic = mỗi fixture một sequence (sequences.json: load / unload_*). tray = nhiều box + nhiều tay hút: robot lấy hàng chưa test từ tray Input vào từng tay hút (tọa độ ô tính từ 3 điểm O, X, Y của tray, đủ 6 giá trị), đổi hàng ở box nào test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. Chế độ tray cần dạy đủ các điểm head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray) và end_effector.heads.",
-    "mode": "classic",
+    "_note": "Cách robot phục vụ các box (nhiều box + nhiều tay hút): robot lấy hàng chưa test từ tray Input vào từng tay hút (tọa độ ô tính từ 3 điểm O, X, Y của tray, đủ 6 giá trị), đổi hàng ở box nào test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. Cần dạy đủ các điểm head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray) và end_effector.heads.",
     "max_attempts": 3,
     "keep_free_heads": 1,
     "max_pick": 8, "max_sort": 8, "pick_ahead": 0, "top_up_when_idle": true, "fill_heads": true,
@@ -102,7 +101,6 @@
   "consecutive_ng": {"limit": 3, "stop_fixture": true},
 
   "engine": {
-    "reload_after_unload": true,
     "auto_start_test": true,
     "send_dut_out": false,
     "test_timeout_s": 300,

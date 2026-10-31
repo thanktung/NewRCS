@@ -1,19 +1,19 @@
-"""Keyence IL-1000 laser displacement sensor on the End Effector (flatness / height / offset check of the DUT).
+"""Cảm biến dịch chuyển laser Keyence IL-1000 trên End Effector (kiểm tra độ phẳng / chiều cao / độ lệch của DUT).
 
-The result of the sensor is read as a judgement on the robot controller I/O (through the bridge, like the pressure
-sensors of the heads). settings.json -> "end_effector" -> "laser":
+Kết quả của cảm biến được đọc dưới dạng judgement trên I/O của controller robot (qua bridge, giống cảm biến
+áp suất của tay hút). settings.json -> "end_effector" -> "laser":
 
     "laser": {
       "enabled": false, "model": "IL-1000",
-      "ok": "RDI[20]",                       judgement GO (inside the tolerance)
-      "high": "RDI[21]", "low": "RDI[22]",   optional: judgement HIGH / LOW (only used to explain a failure)
+      "ok": "RDI[20]",                       judgement GO (nằm trong dung sai)
+      "high": "RDI[21]", "low": "RDI[22]",   tùy chọn: judgement HIGH / LOW (chỉ dùng để giải thích khi lỗi)
       "active": 1, "timeout_s": 1.0
     }
 
-`active` = value of the inputs when the judgement is true. The shipped addresses are placeholders: set the real wiring
-and `enabled: true`. Used by the sequence step  {"ee": "laser", "check": "ok", "timeout_s": 1.0}  (alarm 9204 when the
-judgement is not GO) and by the Manual window (read the judgement).
-Not done yet: reading the measured value itself (needs the IL-1000 communication unit); only the judgement is available.
+`active` = giá trị của ngõ vào khi judgement đúng. Địa chỉ trong file mẫu chỉ là giữ chỗ: đặt đúng dây thật
+rồi `enabled: true`. Được dùng bởi bước sequence  {"ee": "laser", "check": "ok", "timeout_s": 1.0}  (alarm 9204 khi
+judgement không phải GO) và bởi cửa sổ Thủ công (đọc judgement).
+Chưa làm: đọc chính giá trị đo (cần bộ truyền thông của IL-1000); hiện chỉ có judgement.
 """
 import logging
 import threading
@@ -25,7 +25,7 @@ log = logging.getLogger("rcs2.laser")
 
 
 class LaserError(Exception):
-    """The laser check failed (bad configuration, I/O error, judgement is not GO)."""
+    """Kiểm tra laser không đạt (cấu hình sai, lỗi I/O, judgement không phải GO)."""
 
 
 class Laser:
@@ -38,7 +38,7 @@ class Laser:
 
     @classmethod
     def from_config(cls, cfg, io):
-        """cfg = settings["end_effector"]["laser"]. Raises LaserError for a bad entry."""
+        """cfg = settings["end_effector"]["laser"]. Ném LaserError khi một mục khai báo sai."""
         try:
             return cls(io, parse_io(cfg["ok"]), parse_io(cfg["high"]) if cfg.get("high") else None,
                        parse_io(cfg["low"]) if cfg.get("low") else None, bool(cfg.get("enabled", True)),
@@ -57,7 +57,7 @@ class Laser:
             raise LaserError("End Effector: đọc %s[%d] thất bại (%s)" % (ref[0], ref[1], ex))
 
     def status(self):
-        """{"ok": bool, "high": bool | None, "low": bool | None} (None = not wired)."""
+        """{"ok": bool, "high": bool | None, "low": bool | None} (None = không đi dây)."""
         self._need_enabled()
         with self._lock:
             return {"ok": self._read_one(self.ok),
@@ -65,7 +65,7 @@ class Laser:
                     "low": None if self.low is None else self._read_one(self.low)}
 
     def check(self, timeout_s=None):
-        """Wait until the judgement is GO. Raises LaserError (HIGH / LOW when wired) after `timeout_s`."""
+        """Chờ tới khi judgement là GO. Sau `timeout_s` thì ném LaserError (kèm HIGH / LOW nếu có đi dây)."""
         self._need_enabled()
         timeout_s = self.timeout_s if timeout_s is None else float(timeout_s)
         end = time.monotonic() + timeout_s

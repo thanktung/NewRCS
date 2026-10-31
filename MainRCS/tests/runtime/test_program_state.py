@@ -1,18 +1,16 @@
 """Is the robot program running (UO[3] PROGRUN)? Nothing may write R[1] while it is off - e.g. 'safe position' after a stop."""
-import copy
 import tempfile
 import time
 import unittest
 
 from tests.support import bridge as helpers
-from rcs2.ats import protocol as AP
-from rcs2.config import DEFAULTS
 from rcs2.core import engine as E
 from rcs2.robot import protocol as P
 from rcs2.robot.client import BridgeClient, RobotError
 from rcs2.runtime import Runtime
+from rcs2.tools.demo import sample_flow_points
 
-from tests.support.engine import SEQ, EngineCase, FakeRobot, wait_until
+from tests.support.engine import tray_settings, wait_until
 
 
 class ClientTests(unittest.TestCase):
@@ -39,92 +37,6 @@ class ClientTests(unittest.TestCase):
         self.c.close()
         self.assertIsNone(self.c.refresh_program_state())
         self.assertIsNone(self.c.program_state)
-
-
-class FakeProgramRobot(FakeRobot):
-    """Engine test robot that can say whether its program runs."""
-
-    def __init__(self, running=True):
-        FakeRobot.__init__(self)
-        self.program_state = running
-
-    def refresh_program_state(self):
-        return self.program_state
-
-
-class EngineProgramTests(EngineCase):
-    fixtures = 1
-
-    def setUp(self):
-        super().setUp()
-        self.eng.shutdown()
-        self.robot = FakeProgramRobot(True)
-        self.eng = E.Engine(self.cfg, self.robot, self.ats, self.sink, self.errors, SEQ, {})
-        self.eng.start()
-        self.eng.on_ats_connection(1, True)
-        self.eng.set_enabled(1, True)
-
-    def alarm_codes(self):
-        return [a["key"] for a in self.eng.snapshot()["alarms"]]
-
-    def test_snapshot_tells_whether_the_program_runs(self):
-        self.assertIs(self.eng.snapshot()["program_running"], True)
-        self.robot.program_state = False
-        self.assertIs(self.eng.snapshot()["program_running"], False)
-        self.robot.program_state = None
-        self.assertIsNone(self.eng.snapshot()["program_running"])
-
-    def test_the_run_does_not_start_while_the_program_is_off(self):
-        self.robot.program_state = False
-        self.eng.start_run()
-        time.sleep(0.4)
-        self.assertEqual(self.eng.snapshot()["run_state"], E.STOPPED)
-        self.assertFalse(self.robot.armed)
-        self.assertIn("robot_program", self.alarm_codes())
-
-    def test_the_run_does_not_start_when_uo3_cannot_be_read(self):
-        self.robot.program_state = None
-        self.eng.start_run()
-        time.sleep(0.4)
-        self.assertEqual(self.eng.snapshot()["run_state"], E.STOPPED)
-        self.assertFalse(self.robot.armed)
-
-    def test_start_is_clean_once_the_program_runs(self):
-        self.robot.program_state = False
-        self.eng.start_run()
-        wait_until(lambda: "robot_program" in self.alarm_codes(), what="alarm")
-        self.robot.program_state = True
-        self.eng.start_run()
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUNNING, what="RUNNING")
-        self.assertNotIn("robot_program", self.alarm_codes())
-
-    def test_no_job_is_dispatched_while_the_program_is_off(self):
-        self.eng.start_run()
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUNNING, what="RUNNING")
-        self.robot.program_state = False
-        self.eng.on_ats_event(1, AP.parse_message("TtoC_resultWaitdut"))
-        time.sleep(0.6)
-        self.assertEqual(self.robot.calls, [])                       # nothing was written to the robot
-        self.robot.program_state = True
-        wait_until(lambda: self.fx(1)["state"] == E.TESTING, what="load after the program is back")
-
-    def test_a_program_that_stops_during_the_run_pauses_it_with_an_alarm(self):
-        self.eng.start_run()
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUNNING, what="RUNNING")
-        self.robot.program_state = False
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.PAUSED, timeout=4, what="PAUSED")
-        self.assertIn("robot_program", self.alarm_codes())
-        self.robot.program_state = True
-        wait_until(lambda: "robot_program" not in self.alarm_codes(), what="alarm cleared")
-
-    def test_a_short_glitch_does_not_stop_the_cell(self):
-        self.eng.start_run()
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUNNING, what="RUNNING")
-        self.robot.program_state = False
-        time.sleep(0.4)                                              # shorter than the 1 s the engine waits
-        self.robot.program_state = True
-        time.sleep(1.2)
-        self.assertEqual(self.eng.snapshot()["run_state"], E.RUNNING)
 
 
 class FakeBridge:
@@ -194,9 +106,9 @@ class _UopBridge(FakeBridge):
 class RuntimeGuardTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        cfg = copy.deepcopy(DEFAULTS)
+        cfg = tray_settings()
         cfg["outbox_path"] = "outbox.sqlite"
-        self.rt = Runtime(cfg, self.tmp.name, {"points": {}, "sequences": SEQ})
+        self.rt = Runtime(cfg, self.tmp.name, {"points": {}})
         self.bridge = FakeBridge()
         self.rt.bridge = self.bridge
 
@@ -255,12 +167,12 @@ class RuntimeSimTests(unittest.TestCase):
     def setUp(self):
         self.fx = helpers.BridgeFixture(sim_delay_s=0.05)
         self.tmp = tempfile.TemporaryDirectory()
-        cfg = copy.deepcopy(DEFAULTS)
+        cfg = tray_settings()
         cfg["outbox_path"] = "outbox.sqlite"
         cfg["bridge"].update({"host": "127.0.0.1", "port": self.fx.port})
         cfg["robot_start"].update({"pulse_s": 0.02, "poll_s": 0.01, "monitor_s": 0.1, "reset_wait_s": 1.0,
                                    "run_wait_s": 1.0, "stop_wait_s": 1.0})
-        self.rt = Runtime(cfg, self.tmp.name, {"points": {}, "sequences": SEQ})
+        self.rt = Runtime(cfg, self.tmp.name, {"points": sample_flow_points(cfg)})      # Start needs the taught points
         self.logs = []
         self.rt.on_log = lambda level, text: self.logs.append((level, text))
         self.rt.start()

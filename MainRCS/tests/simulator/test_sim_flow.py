@@ -11,7 +11,7 @@ from rcs2.core import dut as D
 from rcs2.core import engine as E
 from rcs2.core.sequence import save_sequences
 from rcs2.runtime import Runtime
-from tests.core.test_flow_engine import BOXES, HEADS, TRAYS, taught_points
+from tests.support.engine import BOXES, HEADS, TRAYS, taught_points
 from tests.simulator.test_sim_cell import wait_until
 
 
@@ -48,13 +48,13 @@ class SimFlowCase(unittest.TestCase):
                       "units": [{"vacuum": "RDO[%d]" % n, "cylinder": "RDO[%d]" % (8 + n), "pressure": "RDI[%d]" % n}
                                 for n in range(1, HEADS + 1)]},
             "scanner": {"type": "tcp", "host": "127.0.0.1", "port": self.cell.scanner.port, "length": 14, "retry": 1, "timeout_s": 1.0}}
-        s["flow"].update({"mode": "tray", "override": 10})
+        s["flow"].update({"override": 10})
         if self.laser:
             s["end_effector"]["laser"] = {"enabled": True, "model": "IL-1000", "ok": "RDI[20]", "high": "RDI[21]", "low": "RDI[22]",
                                           "active": 1, "timeout_s": 0.5}
             s["flow"]["laser_check"] = {"enabled": True, "places": ["box", "input", "output"], "offsets": [[-15, 0, 0], [15, 0, 0]], "timeout_s": 0.5}
         s["trays"] = self.trays
-        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": taught_points(), "sequences": {}})
+        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": taught_points()})
         self.rt = Runtime(s, self.tmp.name)
         self.rt.start()
 

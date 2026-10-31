@@ -1,12 +1,12 @@
-"""Command line tool to try the robot bridge by hand.
+"""Công cụ dòng lệnh để thử bridge robot bằng tay.
 
     python -m rcs2.tools.bridge_cli --host 192.168.2.10 status
     python -m rcs2.tools.bridge_cli --host 192.168.2.10 r-read 1
     python -m rcs2.tools.bridge_cli --host 192.168.2.10 move 300 0 200 180 0 0 --override 5
     python -m rcs2.tools.bridge_cli --host 192.168.2.10 put 1 --override 5
 
-Motion commands arm the bridge for the duration of the command and disarm afterwards.
-ALWAYS test with a low override and a hand on the E-stop.
+Lệnh chuyển động arm bridge trong lúc chạy lệnh rồi disarm sau đó.
+LUÔN thử với override thấp và một tay đặt sẵn trên E-stop.
 """
 import argparse
 import json
@@ -72,7 +72,7 @@ def main(argv=None):
             out = client.pr_read(args.group, args.index)
         elif args.cmd == "io-read":
             out = client.io_read(args.kind, args.index, args.count)
-        else:  # motion
+        else:  # chuyển động
             client.arm()
             try:
                 if args.cmd in ("move", "rmove", "gosafetarge"):

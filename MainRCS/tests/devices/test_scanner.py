@@ -1,16 +1,13 @@
 """Keyence barcode readers: LON / LOFF protocol against a fake TCP reader, a fake COM port, the `scan` sequence
-step and the engine (a code that cannot be read must stop the load BEFORE the robot picks anything)."""
+step (the engine side is tested in tests/core/test_flow_engine.py)."""
 import socket
 import threading
 import time
 import unittest
 
-from rcs2.ats import protocol as AP
-from rcs2.core import engine as E
 from rcs2.core import sequence as S
 from rcs2.devices import scanner as SC
 
-from tests.support.engine import POINTS, SEQ, EngineCase, FakeRobot, wait_until
 
 
 class FakeKeyence:
@@ -418,47 +415,6 @@ class SequenceStepTests(unittest.TestCase):
                 raise SC.ScanCancelled("đã hủy")
         with self.assertRaises(S.JobCancelled):
             S.SequenceRunner(object(), {}, {}, ee=FakeEe(Cancelling())).run("x", [{"ee": "scanner"}], {})
-
-
-SCAN_SEQ = dict(SEQ)
-SCAN_SEQ["load"] = [{"ee": "scanner"}, {"robot": "get", "station": 0}, {"robot": "put", "station": "{robot_station}"}]
-
-
-class EngineScanTests(EngineCase):
-    fixtures = 1
-    codes = ["SN0000000001"]
-
-    def setUp(self):
-        super().setUp()
-        self.eng.shutdown()                         # replace the engine built by EngineCase
-        self.scanner = FakeScanner("scanner", self.codes)
-        self.robot = FakeRobot()
-        self.eng = E.Engine(self.cfg, self.robot, self.ats, self.sink, self.errors, SCAN_SEQ, POINTS,
-                            ee=FakeEe(self.scanner))
-        self.eng.start()
-        self.eng.on_ats_connection(1, True)
-        self.eng.set_enabled(1, True)
-
-    def test_scanned_code_is_shown_on_the_fixture_and_the_dut_is_loaded(self):
-        self.start_and_ready(1)
-        wait_until(lambda: self.fx(1)["state"] == E.TESTING, what="TESTING")
-        self.assertEqual(self.fx(1)["sn"], "SN0000000001")
-        self.assertEqual(self.robot.calls[:2], [("get", 0), ("put", 1)])
-
-    def test_unreadable_code_raises_9202_and_nothing_is_picked(self):
-        self.scanner.codes = [None]
-        self.start_and_ready(1)
-        wait_until(lambda: self.eng.snapshot()["run_state"] == E.RUN_FAULT, what="FAULT")
-        snap = self.eng.snapshot()
-        self.assertTrue(any(a["code"] == "9202" for a in snap["alarms"]), snap["alarms"])
-        self.assertFalse(any(a["code"] == "9201" for a in snap["alarms"]))
-        self.assertEqual(self.robot.calls, [])                    # the robot never moved
-        self.assertIn("không đọc được mã", snap["fault_text"])
-        self.assertEqual(self.fx(1)["state"], E.FAULT)
-
-    def test_engine_refuses_a_scanner_step_without_a_scanner_at_start_up(self):
-        with self.assertRaises(S.SequenceError):
-            E.Engine(self.cfg, self.robot, self.ats, self.sink, self.errors, SCAN_SEQ, POINTS, ee=FakeEe(None))
 
 
 if __name__ == "__main__":

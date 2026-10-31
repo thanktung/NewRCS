@@ -1,28 +1,28 @@
-"""Geometry of the tray flow: poses with all 6 values (x, y, z, w, p, r), tray grids and the offsets between the suction heads.
+"""Hình học của luồng tray: pose đủ 6 giá trị (x, y, z, w, p, r), lưới tray và độ lệch giữa các tay hút.
 
-Everything here is pure maths (no I/O, no numpy): it turns a handful of TAUGHT points into the pose the robot must go to for
-"head k over cell (r, c) of the tray" or "head k over fixture n".
+Mọi thứ ở đây là toán thuần (không I/O, không numpy): nó biến một vài điểm ĐÃ DẠY thành pose robot phải tới cho
+"tay k ở trên ô (r, c) của tray" hoặc "tay k ở trên fixture n".
 
-Poses
-  A pose is `[x, y, z, w, p, r]` (mm, degrees, FANUC convention: rotation matrix R = Rz(r) · Ry(p) · Rx(w)). A taught point
-  is a pose or a dict {"xyzwpr": [...], "config": [...], "uf": n, "ut": n} (what the Manual window saves). All six values are
-  kept and used; the CONFIG / UF / UT of a taught point are carried to the result.
+Pose
+  Một pose là `[x, y, z, w, p, r]` (mm, độ, quy ước FANUC: ma trận quay R = Rz(r) · Ry(p) · Rx(w)). Một điểm dạy
+  là một pose hoặc một dict {"xyzwpr": [...], "config": [...], "uf": n, "ut": n} (những gì cửa sổ Thủ công lưu). Cả sáu giá trị đều
+  được giữ và dùng; CONFIG / UF / UT của điểm dạy được mang sang kết quả.
 
-Tray grid (3 points)
-  O = cell (row 0, col 0), X = cell (row 0, last col), Y = cell (last row, col 0), all taught with head 1.
-  cell(r, c) = O + c * (X - O) / (cols - 1) + r * (Y - O) / (rows - 1), done on EACH of the six values, so a tray that is
-  tilted, twisted or shifted is followed (the angle differences are wrapped to -180..180 first).
-  O, X and Y must have the same CONFIG / UF / UT, otherwise the grid is refused.
+Lưới tray (3 điểm)
+  O = ô (hàng 0, cột 0), X = ô (hàng 0, cột cuối), Y = ô (hàng cuối, cột 0), đều dạy bằng tay 1.
+  cell(r, c) = O + c * (X - O) / (cols - 1) + r * (Y - O) / (rows - 1), tính trên TỪNG giá trị trong sáu giá trị, nên tray bị
+  nghiêng, xoắn hay dịch đều được bám theo (hiệu các góc được đưa về -180..180 trước).
+  O, X và Y phải có cùng CONFIG / UF / UT, nếu không lưới bị từ chối.
 
-Head offsets (the heads are fixed on the tool, so the offset between two heads is a rigid transform)
-  Teach head 1 at the point O: the robot pose is A = P1(O). Teach head k at the SAME point O: the robot pose is Bk = Pk(O).
-  A point Q taught with head 1 (robot pose P1(Q)) is reached by head k with the robot pose
-        Pk(Q) = P1(Q) * inverse(A) * Bk          (4x4 matrices)
-  which is right for every orientation of Q (the offset turns with the tool) - not only a shift of x / y / z. The reader of the
-  End Effector (scanner) and its laser sensor (IL-1000) are handled exactly like one more head.
+Độ lệch giữa các tay (các tay gắn cố định trên tool, nên độ lệch giữa hai tay là một phép biến đổi cứng)
+  Dạy tay 1 tại điểm O: pose robot là A = P1(O). Dạy tay k tại CÙNG điểm O: pose robot là Bk = Pk(O).
+  Một điểm Q dạy bằng tay 1 (pose robot P1(Q)) được tay k tới bằng pose robot
+        Pk(Q) = P1(Q) * inverse(A) * Bk          (ma trận 4x4)
+  đúng với mọi hướng của Q (độ lệch xoay theo tool) - không chỉ là dịch x / y / z. Đầu đọc mã của
+  End Effector (scanner) và cảm biến laser (IL-1000) được xử lý y như thêm một tay nữa.
 
-Laser check of a placed product: the laser is moved over measuring points that are given as offsets (x, y, z in mm) in the frame of the
-place where the product was put (a cell of a tray, a box): `Layout.laser_poses()`.
+Kiểm tra laser một sản phẩm đã đặt: đầu laser được đưa qua các điểm đo cho dưới dạng độ lệch (x, y, z mm) trong hệ tọa độ của
+chỗ đặt sản phẩm (một ô của tray, một box): `Layout.laser_poses()`.
 """
 import math
 
@@ -33,19 +33,19 @@ ANGLE_FIELDS = (3, 4, 5)
 
 
 class GeometryError(ValueError):
-    """Missing / inconsistent taught points or an impossible grid."""
+    """Điểm dạy thiếu / không khớp nhau, hoặc lưới không thể có."""
 
 
 # ---------------------------------------------------------------------------------------------------------------- #
-# poses <-> 4x4 matrices
+# pose <-> ma trận 4x4
 # ---------------------------------------------------------------------------------------------------------------- #
 def wrap180(angle):
-    """Angle in degrees -> the equivalent angle in [-180, 180)."""
+    """Góc (độ) -> góc tương đương trong [-180, 180)."""
     return (float(angle) + 180.0) % 360.0 - 180.0
 
 
 def split_point(value):
-    """A taught point -> (six floats, extras). `extras` = {"config", "uf", "ut"} and any 7th..9th value (extended axes)."""
+    """Một điểm dạy -> (sáu số thực, phần thêm). `extras` = {"config", "uf", "ut"} và mọi giá trị thứ 7..9 (trục mở rộng)."""
     if isinstance(value, dict):
         xyz = value.get("xyzwpr")
         extras = {k: value[k] for k in ("config", "uf", "ut") if value.get(k) is not None}
@@ -58,7 +58,7 @@ def split_point(value):
 
 
 def make_point(xyz6, like=None):
-    """Six floats -> a point dict. CONFIG / UF / UT (and extended axes) are taken from `like` (a taught point)."""
+    """Sáu số thực -> một dict điểm. CONFIG / UF / UT (và trục mở rộng) lấy từ `like` (một điểm dạy)."""
     _, extras = split_point(like) if like is not None else ([], {"tail": []})
     out = {"xyzwpr": [round(v, 6) for v in xyz6] + list(extras.get("tail", []))}
     for key in ("config", "uf", "ut"):
@@ -68,7 +68,7 @@ def make_point(xyz6, like=None):
 
 
 def to_matrix(xyzwpr):
-    """[x, y, z, w, p, r] -> 4x4 matrix (list of 4 rows). R = Rz(r) * Ry(p) * Rx(w)."""
+    """[x, y, z, w, p, r] -> ma trận 4x4 (danh sách 4 hàng). R = Rz(r) * Ry(p) * Rx(w)."""
     x, y, z, w, p, r = (float(v) for v in xyzwpr[:6])
     sw, cw = math.sin(math.radians(w)), math.cos(math.radians(w))
     sp, cp = math.sin(math.radians(p)), math.cos(math.radians(p))
@@ -80,13 +80,13 @@ def to_matrix(xyzwpr):
 
 
 def from_matrix(m):
-    """4x4 matrix -> [x, y, z, w, p, r] (degrees, w and r in [-180, 180], p in [-90, 90])."""
+    """Ma trận 4x4 -> [x, y, z, w, p, r] (độ, w và r trong [-180, 180], p trong [-90, 90])."""
     cp = math.hypot(m[0][0], m[1][0])
     if cp > 1e-9:
         p = math.degrees(math.atan2(-m[2][0], cp))
         w = math.degrees(math.atan2(m[2][1], m[2][2]))
         r = math.degrees(math.atan2(m[1][0], m[0][0]))
-    else:                                           # gimbal lock (p = +-90): r is set to 0, w takes the whole rotation
+    else:                                           # gimbal lock (p = +-90): r đặt bằng 0, w nhận toàn bộ góc quay
         p = 90.0 if m[2][0] < 0 else -90.0
         r = 0.0
         w = math.degrees(math.atan2(-m[1][2], m[1][1]))
@@ -98,23 +98,23 @@ def mat_mul(a, b):
 
 
 def mat_inv(m):
-    """Inverse of a rigid transform (rotation + translation)."""
+    """Nghịch đảo của một phép biến đổi cứng (quay + tịnh tiến)."""
     rt = [[m[j][i] for j in range(3)] for i in range(3)]
     t = [-sum(rt[i][k] * m[k][3] for k in range(3)) for i in range(3)]
     return [rt[0] + [t[0]], rt[1] + [t[1]], rt[2] + [t[2]], [0.0, 0.0, 0.0, 1.0]]
 
 
 def pose_close(a, b, mm=1e-3, deg=1e-3):
-    """Are two poses the same? (angles compared modulo 360)."""
+    """Hai pose có giống nhau không? (góc so sánh theo modulo 360)"""
     return (all(abs(a[i] - b[i]) <= mm for i in range(3))
             and all(abs(wrap180(a[i] - b[i])) <= deg for i in ANGLE_FIELDS))
 
 
 # ---------------------------------------------------------------------------------------------------------------- #
-# tray grid
+# lưới tray
 # ---------------------------------------------------------------------------------------------------------------- #
 class TrayGrid:
-    """rows x cols cells computed from the three taught points O, X, Y (see the module docstring)."""
+    """rows x cols ô tính từ ba điểm dạy O, X, Y (xem docstring của module)."""
 
     def __init__(self, o, x, y, rows, cols, name="tray"):
         for label, v in (("rows", rows), ("cols", cols)):
@@ -133,7 +133,7 @@ class TrayGrid:
         self._step_r = self._step(self._y, rows, "Y")
 
     def _step(self, end, count, label):
-        """Change of the six values from one cell to the next along one side (zero when the side has a single cell)."""
+        """Mức thay đổi của sáu giá trị từ ô này sang ô kế tiếp dọc một cạnh (bằng 0 khi cạnh chỉ có một ô)."""
         if count == 1:
             return [0.0] * 6
         step = []
@@ -152,12 +152,12 @@ class TrayGrid:
         return self.rows * self.cols
 
     def index(self, row, col):
-        """Position in reading order (row by row, left to right) of the cell (row, col)."""
+        """Vị trí theo thứ tự đọc (từng hàng, trái sang phải) của ô (row, col)."""
         self._check(row, col)
         return row * self.cols + col
 
     def rc(self, index):
-        """(row, col) of the cell at this position in reading order."""
+        """(row, col) của ô ở vị trí này theo thứ tự đọc."""
         if not 0 <= index < self.capacity:
             raise GeometryError("%s: cell index %r is outside 0..%d" % (self.name, index, self.capacity - 1))
         return divmod(index, self.cols)
@@ -167,7 +167,7 @@ class TrayGrid:
             raise GeometryError("%s: cell (%r, %r) is outside the tray (%d rows x %d cols)" % (self.name, row, col, self.rows, self.cols))
 
     def cell(self, row, col):
-        """Pose (point dict with all 6 values + CONFIG / UF / UT of O) of the cell, as head 1 must reach it."""
+        """Pose (dict điểm đủ 6 giá trị + CONFIG / UF / UT của O) của ô, theo cách tay 1 phải tới."""
         self._check(row, col)
         v = [self._o[i] + col * self._step_c[i] + row * self._step_r[i] for i in range(6)]
         for i in ANGLE_FIELDS:
@@ -179,11 +179,11 @@ class TrayGrid:
 
 
 # ---------------------------------------------------------------------------------------------------------------- #
-# heads
+# các tay
 # ---------------------------------------------------------------------------------------------------------------- #
 class HeadTransforms:
-    """Offsets between the heads (and the scanner) from the poses taught at the same point O: `at_o` = {1: pose, 2: pose, ...,
-    "scanner": pose}; head 1 is the reference. `pose_for(k, q)` gives the robot pose that puts head k where head 1 is at `q`."""
+    """Độ lệch giữa các tay (và scanner) tính từ các pose dạy tại cùng điểm O: `at_o` = {1: pose, 2: pose, ...,
+    "scanner": pose}; tay 1 là chuẩn. `pose_for(k, q)` cho pose robot đưa tay k tới chỗ tay 1 ở tại `q`."""
 
     def __init__(self, at_o, count=None):
         if REFERENCE_HEAD not in at_o:
@@ -203,7 +203,7 @@ class HeadTransforms:
         return key in self._t
 
     def pose_for(self, key, q):
-        """Robot pose for head `key` (int, or "scanner") at the taught point `q` (pose or point dict)."""
+        """Pose robot cho tay `key` (số, hoặc "scanner") tại điểm dạy `q` (pose hoặc dict điểm)."""
         if key not in self._t:
             raise GeometryError("no offset for %r (head / scanner not taught at O)" % (key,))
         xyz, _ = split_point(q)
@@ -211,34 +211,34 @@ class HeadTransforms:
         return make_point(out, like=q)
 
     def offset(self, key):
-        """The six values of the transform head 1 -> `key` (a head, "scanner" or "laser") in the tool frame (for display / checks)."""
+        """Sáu giá trị của phép biến đổi tay 1 -> `key` (một tay, "scanner" hoặc "laser") trong hệ tọa độ tool (để hiển thị / kiểm tra)."""
         return from_matrix(self._t[key])
 
 
 # ---------------------------------------------------------------------------------------------------------------- #
-# the whole layout (taught points of sequences.json -> poses)
+# toàn bộ layout (điểm dạy của sequences.json -> pose)
 # ---------------------------------------------------------------------------------------------------------------- #
 def head_point_name(key):
     return {SCANNER: "scanner_at_O", LASER: "laser_at_O"}.get(key) or "head_%d_at_O" % key
 
 
 def shift_pose(q, offset):
-    """The point `q` moved by `offset` = (dx, dy, dz) mm measured in the frame of `q` (its orientation is kept)."""
+    """Điểm `q` dịch đi `offset` = (dx, dy, dz) mm đo trong hệ tọa độ của `q` (giữ nguyên hướng của nó)."""
     xyz, _ = split_point(q)
     t = [[1.0, 0.0, 0.0, float(offset[0])], [0.0, 1.0, 0.0, float(offset[1])], [0.0, 0.0, 1.0, float(offset[2])], [0.0, 0.0, 0.0, 1.0]]
     return make_point(from_matrix(mat_mul(to_matrix(xyz), t)), like=q)
 
 
 class Layout:
-    """Everything the planner needs to know about WHERE things are, built from the taught points by name:
+    """Mọi thứ planner cần biết về VỊ TRÍ của mọi thứ, dựng từ các điểm dạy theo tên:
 
-        head_<k>_at_O  (k = 1..heads)   scanner_at_O (optional)     the same point O taught with each head / the reader
-        input_O  input_X  input_Y        the input tray (head 1)
-        ng_O  ng_X  ng_Y                 the NG tray (head 1)
-        output1_O/X/Y  output2_O/X/Y     the output trays for passed products (head 1), only those that are in settings.json -> trays
-        fixture_<n>                      the place of fixture n (head 1)
-        laser_at_O (optional)            the laser sensor over the same point O (only when the placed products are checked with it)
-    `trays` = {"input": {"rows", "cols"}, "ng": {...}}; `fixtures` = the fixture numbers; `heads` = number of heads.
+        head_<k>_at_O  (k = 1..heads)   scanner_at_O (tùy chọn)     cùng một điểm O dạy bằng từng tay / bằng đầu đọc
+        input_O  input_X  input_Y        tray Input (tay 1)
+        ng_O  ng_X  ng_Y                 tray NG (tay 1)
+        output1_O/X/Y  output2_O/X/Y     các tray output cho hàng đạt (tay 1), chỉ những tray có trong settings.json -> trays
+        fixture_<n>                      vị trí của fixture n (tay 1)
+        laser_at_O (tùy chọn)            cảm biến laser ở trên cùng điểm O (chỉ khi sản phẩm đã đặt được kiểm tra bằng nó)
+    `trays` = {"input": {"rows", "cols"}, "ng": {...}}; `fixtures` = số các fixture; `heads` = số tay hút.
     """
 
     def __init__(self, points, trays, fixtures, heads, scanner=False, laser=False):
@@ -256,12 +256,12 @@ class Layout:
                               trays["input"]["cols"], "input tray")
         self.ng = TrayGrid(points["ng_O"], points["ng_X"], points["ng_Y"], trays["ng"]["rows"], trays["ng"]["cols"], "NG tray")
         self.outputs = [TrayGrid(points["%s_O" % n], points["%s_X" % n], points["%s_Y" % n], trays[n]["rows"], trays[n]["cols"], n)
-                        for n in self.output_names(trays)]                     # output tray k (0-based) = "output<k+1>"
+                        for n in self.output_names(trays)]                     # tray output k (bắt đầu từ 0) = "output<k+1>"
         self._fixture_points = {n: points["fixture_%d" % n] for n in self.fixtures}
 
     @staticmethod
     def output_names(trays):
-        """The output trays that are configured, in the order they are used: ["output1", "output2"] / ["output1"] / []."""
+        """Các tray output được cấu hình, theo thứ tự sử dụng: ["output1", "output2"] / ["output1"] / []."""
         return [n for n in ("output1", "output2") if n in (trays or {})]
 
     @staticmethod
@@ -279,16 +279,16 @@ class Layout:
 
     @classmethod
     def missing(cls, points, trays, fixtures, heads, scanner=False, laser=False):
-        """Names of the taught points that are not there yet (empty list = complete)."""
+        """Tên các điểm dạy còn thiếu (danh sách rỗng = đủ)."""
         absent = [n for n in cls.required_names(trays, fixtures, heads, scanner, laser) if n not in points]
         for kind in ("input", "ng"):
             if kind not in (trays or {}):
                 absent.append("settings.json -> trays -> %s" % kind)
         return absent
 
-    # ---- poses the robot must go to -------------------------------------------------------------- #
+    # ---- các pose robot phải tới ----------------------------------------------------------------- #
     def pick_pose(self, head, index):
-        """Head `head` over the cell `index` (reading order) of the INPUT tray."""
+        """Tay `head` ở trên ô `index` (thứ tự đọc) của tray INPUT."""
         return self.transforms.pose_for(head, self.input.cell_by_index(index))
 
     def input_pose(self, head, index):
@@ -298,19 +298,19 @@ class Layout:
         return self.transforms.pose_for(head, self.ng.cell_by_index(index))
 
     def output_pose(self, head, tray, index):
-        """Head `head` over cell `index` of output tray `tray` (0-based: 0 = output1, 1 = output2)."""
+        """Tay `head` ở trên ô `index` của tray output `tray` (bắt đầu từ 0: 0 = output1, 1 = output2)."""
         return self.transforms.pose_for(head, self.outputs[tray].cell_by_index(index))
 
     def fixture_pose(self, head, number):
         return self.transforms.pose_for(head, self._fixture_points[number])
 
     def scan_pose(self, index):
-        """The barcode reader over the cell `index` of the input tray."""
+        """Đầu đọc mã ở trên ô `index` của tray Input."""
         return self.transforms.pose_for(SCANNER, self.input.cell_by_index(index))
 
     def laser_poses(self, kind, ref, offsets):
-        """Robot poses that put the laser sensor over the measuring points of the product just placed at `ref`:
-        kind "input" / "ng" = cell index of that tray, "output" = (output tray index, cell), "box" = fixture number. `offsets` = [(dx, dy, dz) mm, ...] in the frame of the place."""
+        """Các pose robot đưa cảm biến laser tới trên các điểm đo của sản phẩm vừa đặt tại `ref`:
+        kind "input" / "ng" = chỉ số ô của tray đó, "output" = (chỉ số tray output, ô), "box" = số fixture. `offsets` = [(dx, dy, dz) mm, ...] trong hệ tọa độ của chỗ đặt."""
         if kind == "input":
             place = self.input.cell_by_index(ref)
         elif kind == "ng":

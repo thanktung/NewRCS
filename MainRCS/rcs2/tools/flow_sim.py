@@ -1,12 +1,12 @@
-"""What-if simulator of the tray flow (planner + books, discrete events, no robot, no network).
+"""Bộ mô phỏng "nếu - thì" của luồng tray (planner + sổ sách, sự kiện rời rạc, không robot, không mạng).
 
-    python -m rcs2.tools.flow_sim                                  10 boxes, 8 heads, 80 products, test 120 s
+    python -m rcs2.tools.flow_sim                                  10 box, 8 tay, 80 sản phẩm, test 120 s
     python -m rcs2.tools.flow_sim --boxes 6 --test-time 60 --pass-rate 0.8 --cells 48 --seed 3
-    python -m rcs2.tools.flow_sim --keep-free 0 --max-pick 4       try other planner settings
+    python -m rcs2.tools.flow_sim --keep-free 0 --max-pick 4       thử cài đặt planner khác
 
-It answers "how long does a box stay idle?": the planner (rcs2/core/planner.py) is asked for a task whenever the robot is free, the task
-takes the time given by the robot timings below, the boxes finish their tests at random times with the given pass rate, and the books
-(rcs2/core/dut.py) are updated exactly as the real engine does it. The same module is used by the tests to check the invariants.
+Nó trả lời câu hỏi "một box phải nằm chờ bao lâu?": mỗi khi robot rảnh thì hỏi planner (rcs2/core/planner.py) việc tiếp theo, việc đó
+tốn thời gian theo các thông số thời gian robot bên dưới, các box test xong vào thời điểm ngẫu nhiên với tỷ lệ đạt đã cho, và sổ sách
+(rcs2/core/dut.py) được cập nhật y như engine thật. Test cũng dùng chính module này để kiểm tra các bất biến.
 """
 import argparse
 import random
@@ -20,21 +20,21 @@ from ..core.planner import FixtureView, Planner, PlannerConfig, ServiceTask, Tak
 class SimConfig:
     boxes: int = 10
     heads: int = 8
-    cells: int = 80                     # products in the input tray
+    cells: int = 80                     # số sản phẩm trong tray Input
     ng_cells: int = 40
-    outputs: tuple = ()                 # cells of output tray 1, 2 ... for the passed products (empty = they go back into the input tray)
-    test_time: float = 120.0            # seconds a test takes
-    jitter: float = 0.15                # +- fraction of random variation of the test time
+    outputs: tuple = ()                 # số ô của tray output 1, 2 ... cho hàng đạt (rỗng = hàng đạt về lại tray Input)
+    test_time: float = 120.0            # số giây một lần test
+    jitter: float = 0.15                # +- tỷ lệ dao động ngẫu nhiên của thời gian test
     pass_rate: float = 0.9
     max_attempts: int = 3
-    # robot timings (seconds)
-    travel: float = 3.0                 # between the tray area and the boxes (one way, counted once per visit)
-    move: float = 1.2                   # robot move to put one head over its target
-    pick: float = 1.0                   # cylinder down, vacuum on, check, cylinder up
-    place: float = 1.0                  # cylinder down, vacuum off, cylinder up
-    scan: float = 0.8                   # read one barcode
-    ats: float = 0.2                    # send barcode + placeDUTOK
-    laser: float = 2.5                  # the laser check after a put down: 2 moves + 2 readings (0 = laser check off)
+    # thời gian của robot (giây)
+    travel: float = 3.0                 # giữa khu tray và các box (một chiều, tính một lần mỗi chuyến)
+    move: float = 1.2                   # robot di chuyển để đưa một tay tới trên mục tiêu
+    pick: float = 1.0                   # hạ xy lanh, bật hút, kiểm tra, nâng xy lanh
+    place: float = 1.0                  # hạ xy lanh, tắt hút, nâng xy lanh
+    scan: float = 0.8                   # đọc một mã vạch
+    ats: float = 0.2                    # gửi mã vạch + placeDUTOK
+    laser: float = 2.5                  # kiểm tra laser sau khi đặt xuống: 2 lần di chuyển + 2 lần đọc (0 = tắt kiểm tra laser)
     seed: int = 1
     planner: PlannerConfig = field(default_factory=PlannerConfig)
 
@@ -47,22 +47,22 @@ class FlowSim:
         self.heads = {k: None for k in range(1, cfg.heads + 1)}
         self.fixtures = [FixtureView(n) for n in range(1, cfg.boxes + 1)]
         self.fx = {f.number: f for f in self.fixtures}
-        self.test_end = {}                      # box -> time its test ends
+        self.test_end = {}                      # box -> thời điểm test của nó kết thúc
         self.planner = Planner(cfg.planner)
-        self._started = {}                       # box -> time its running test started
+        self._started = {}                       # box -> thời điểm test đang chạy của nó bắt đầu
         self.t = 0.0
-        self.idle = {n: [] for n in self.fx}    # box -> idle seconds before every product that was put in
+        self.idle = {n: [] for n in self.fx}    # box -> số giây chờ trước mỗi sản phẩm được đặt vào
         self.busy_time = 0.0
-        self.log = []                           # (time, text) of every task
+        self.log = []                           # (thời điểm, mô tả) của mọi việc
         self.tasks = 0
-        self.tray_visits = 0                    # trips to the input tray (each one is a long way)
+        self.tray_visits = 0                    # số chuyến tới tray Input (mỗi chuyến là một quãng đường dài)
 
-    # ---- helpers ----------------------------------------------------------------------------------- #
+    # ---- hàm phụ ----------------------------------------------------------------------------------- #
     def world(self):
         return World(self.t, dict(self.heads), self.fixtures, self.book)
 
     def check(self):
-        """Invariants (raise AssertionError): every product is in exactly one place, a box holds at most one, tests <= max, boxes differ."""
+        """Bất biến (ném AssertionError): mỗi sản phẩm ở đúng một chỗ, một box chứa tối đa một, số lần test <= max, các box khác nhau."""
         seen = {}
         for d in self.book.duts.values():
             assert d.tests_made <= self.cfg.max_attempts, d
@@ -88,10 +88,10 @@ class FlowSim:
         assert all(0 <= u <= c for u, c in zip(b.out_used, b.out_capacity)), "an output tray is over-filled"
         assert len({d.location[1] for d in in_out}) == len(in_out), "two products in the same output cell"
         picked = len(b.duts)
-        assert b.cells.count(D.EMPTY) == picked - len(returned), "empty cells do not match the products that left"      # (a product in an output tray left the input tray for good)
+        assert b.cells.count(D.EMPTY) == picked - len(returned), "empty cells do not match the products that left"      # (sản phẩm trong tray output đã rời tray Input hẳn)
 
     def _finish_tests(self, up_to):
-        """Results of every test that ended at or before `up_to` (in order)."""
+        """Kết quả của mọi lần test đã kết thúc trước hoặc đúng `up_to` (theo thứ tự)."""
         for n, end in sorted(self.test_end.items(), key=lambda kv: kv[1]):
             if end > up_to:
                 continue
@@ -102,11 +102,11 @@ class FlowSim:
             del self.test_end[n]
             self.book.settle_stuck([x.number for x in self.fixtures if x.available])
 
-    # ---- applying a task ------------------------------------------------------------------------------- #
+    # ---- thực hiện một việc --------------------------------------------------------------------------- #
     def _duration(self, task):
         c = self.cfg
         if isinstance(task, TrayTask):
-            passed = sum(1 for _, i in task.sorts if self.book.duts[i].need == D.RETURN)       # (the NG tray is not checked by default)
+            passed = sum(1 for _, i in task.sorts if self.book.duts[i].need == D.RETURN)       # (tray NG mặc định không kiểm tra)
             return (c.travel + len(task.sorts) * (c.move + c.place) + passed * c.laser + len(task.picks) * (c.scan + c.move + c.pick)
                     + (c.travel if any(self.book.duts[i].need == D.NG for _, i in task.sorts) else 0.0))
         if isinstance(task, ServiceTask):
@@ -115,10 +115,10 @@ class FlowSim:
         return c.travel + c.move + c.pick                                   # TakeTask
 
     def _place_time(self, task):
-        """Seconds from the start of the task until the product is in the box and its test starts."""
+        """Số giây từ lúc bắt đầu việc tới khi sản phẩm nằm trong box và bắt đầu test."""
         c = self.cfg
         take = (c.move + c.pick) if getattr(task, "take_head", None) else 0.0
-        return c.travel + take + c.move + c.place + c.laser                # the test starts after the laser check
+        return c.travel + take + c.move + c.place + c.laser                # test bắt đầu sau khi kiểm tra laser
 
     def _apply(self, task, t0):
         c = self.cfg
@@ -137,7 +137,7 @@ class FlowSim:
             if isinstance(task, TakeTask):
                 self.book.take_from_box(f.dut, task.head)
                 self.heads[task.head] = f.dut
-                f.dut, f.finished = None, False          # idle_since stays: the box has waited since its result
+                f.dut, f.finished = None, False          # idle_since giữ nguyên: box đã chờ từ lúc có kết quả
                 return
             if task.take_head:
                 tested = f.dut
@@ -152,7 +152,7 @@ class FlowSim:
             self._started[f.number] = ts
             self.test_end[f.number] = ts + c.test_time * (1 + self.rng.uniform(-c.jitter, c.jitter))
 
-    # ---- main loop ------------------------------------------------------------------------------------ #
+    # ---- vòng lặp chính ----------------------------------------------------------------------------- #
     def run(self, max_time=10 ** 7):
         stuck = False
         while self.t < max_time:
@@ -171,7 +171,7 @@ class FlowSim:
             if not self.test_end:
                 stuck = True
                 break
-            self.t = min(self.test_end.values())                          # wait for the next result
+            self.t = min(self.test_end.values())                          # chờ kết quả kế tiếp
         self.check()
         return self.report(stuck)
 

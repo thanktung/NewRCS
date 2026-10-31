@@ -188,7 +188,6 @@ class MainWindow(QtWidgets.QMainWindow):
         for f in self.rt.engine.snapshot()["fixtures"]:
             card = FixtureCard(f["number"], f["station"])
             card.toggled.connect(self.rt.engine.set_enabled)
-            card.reset_requested.connect(self._reset_fixture)
             self.cards[f["number"]] = card
         self.grid.set_widgets(list(self.cards.values()))
         scroll.setWidget(self.grid)
@@ -261,7 +260,6 @@ class MainWindow(QtWidgets.QMainWindow):
             card = self.cards[f["number"]]
             card.update_from(f, self.test_timeout)
             card.use.setEnabled(operator)
-            card.menu_btn.setEnabled(operator)
         self.robot_panel.update_from(snap)
         self.robot_panel.btn_connect.setEnabled(self.robot_panel.btn_connect.isEnabled() and operator)
         self.robot_panel.btn_safe.setEnabled(self.robot_panel.btn_safe.isEnabled() and operator)
@@ -329,12 +327,6 @@ class MainWindow(QtWidgets.QMainWindow):
             msg = "Dừng chạy?"
         if F.confirm(self, "Dừng", msg, default_yes=True):
             self.rt.engine.stop_run()
-
-    def _reset_fixture(self, number, dut_inside):
-        what = "LẤY DUT ra thùng NG" if dut_inside else "đánh dấu fixture là TRỐNG"
-        if F.confirm(self, "Đặt lại fixture %d" % number,
-                     "Đặt lại fixture %d và %s?\nHãy kiểm tra fixture bằng mắt trước." % (number, what)):
-            self.rt.engine.reset_fixture(number, dut_inside)
 
     def _reset_tray(self, kind):
         what = ("đã NẠP LẠI tray Input (các ô đều có DUT)" if kind == "input"

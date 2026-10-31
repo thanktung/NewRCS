@@ -1,55 +1,32 @@
 {
   "example": true,
-  "_note": "PLACEHOLDER coordinates. Teach the real points, then delete the line  \"example\": true  (NewRCS refuses to Start on a real robot while it is there). Names in {braces} are filled in per job.",
-
+  "_note": "PLACEHOLDER coordinates for the tray flow (sized from settings.example.json). Teach the real points with Manual -> Hiệu chuẩn luồng tray, then delete the line  \"example\": true  (NewRCS refuses to Start on a real robot while it is there).",
   "points": {
-    "above_input":     [300, -200, 250, 180, 0, 0],
-    "above_pass":      [-300, -200, 250, 180, 0, 0],
-    "above_ng":        [-300, 200, 250, 180, 0, 0],
-    "above_fixture_1": [100, 300, 250, 180, 0, 0],
-    "above_fixture_2": [200, 300, 250, 180, 0, 0],
-    "above_fixture_3": [300, 300, 250, 180, 0, 0],
-    "above_fixture_4": [400, 300, 250, 180, 0, 0]
-  },
-
-  "_example_load_with_scan": [
-    {"robot": "move", "pose": "above_input"},
-    {"ee": "scanner", "length": 14},
-    {"ats": "barcode", "sn": "{sn}"},
-    {"robot": "get",  "station": 0},
-    {"robot": "move", "pose": "above_fixture_{fixture}"},
-    {"robot": "put",  "station": "{robot_station}"}
-  ],
-
-  "_example_pick_with_end_effector": [
-    {"robot": "move", "pose": "above_input"},
-    {"ee": "scanner"},
-    {"ee": "heads", "cylinder": "down", "heads": "all"},
-    {"ee": "heads", "vacuum": "on",     "heads": "all"},
-    {"ee": "heads", "cylinder": "up",   "heads": "all"},
-    {"ee": "heads", "check": "hold",    "heads": "all", "timeout_s": 1.0},
-    {"ee": "laser", "check": "ok",       "timeout_s": 1.0},
-    {"robot": "move", "pose": "above_fixture_{fixture}"}
-  ],
-
-  "sequences": {
-    "load": [
-      {"robot": "move", "pose": "above_input"},
-      {"robot": "get",  "station": 0},
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "put",  "station": "{robot_station}"}
-    ],
-    "unload_pass": [
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "get",  "station": "{robot_station}"},
-      {"robot": "move", "pose": "above_pass"},
-      {"robot": "put",  "station": 8}
-    ],
-    "unload_ng": [
-      {"robot": "move", "pose": "above_fixture_{fixture}"},
-      {"robot": "get",  "station": "{robot_station}"},
-      {"robot": "move", "pose": "above_ng"},
-      {"robot": "put",  "station": 9}
-    ]
+    "head_1_at_O": {"xyzwpr": [500.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_2_at_O": {"xyzwpr": [478.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_3_at_O": {"xyzwpr": [456.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_4_at_O": {"xyzwpr": [434.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_5_at_O": {"xyzwpr": [412.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_6_at_O": {"xyzwpr": [390.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_7_at_O": {"xyzwpr": [368.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "head_8_at_O": {"xyzwpr": [346.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "scanner_at_O": {"xyzwpr": [545.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "laser_at_O": {"xyzwpr": [575.0, 100.0, 300.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "input_O": {"xyzwpr": [100.0, 200.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "input_X": {"xyzwpr": [184.0, 200.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "input_Y": {"xyzwpr": [100.0, 248.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "ng_O": {"xyzwpr": [400.0, 200.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "ng_X": {"xyzwpr": [460.0, 200.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "ng_Y": {"xyzwpr": [400.0, 236.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output1_O": {"xyzwpr": [100.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output1_X": {"xyzwpr": [184.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output1_Y": {"xyzwpr": [100.0, 398.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output2_O": {"xyzwpr": [400.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output2_X": {"xyzwpr": [484.0, 350.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "output2_Y": {"xyzwpr": [400.0, 398.0, 50.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "fixture_1": {"xyzwpr": [150.0, 600.0, 200.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "fixture_2": {"xyzwpr": [230.0, 600.0, 200.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "fixture_3": {"xyzwpr": [310.0, 600.0, 200.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "fixture_4": {"xyzwpr": [390.0, 600.0, 200.0, 180.0, 0.0, 0.0], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1}
   }
 }

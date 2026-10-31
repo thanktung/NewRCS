@@ -1,1 +1,1 @@
-"""ATS (fixture test program) access: protocol, client and a mock server."""
+"""Truy cập ATS (chương trình test của fixture): giao thức, client và một server giả."""

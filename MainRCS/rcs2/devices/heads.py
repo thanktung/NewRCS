@@ -1,8 +1,8 @@
-"""The suction heads of the End Effector: per head one vacuum valve, one up/down cylinder and one pressure sensor.
+"""Các tay hút của End Effector: mỗi tay có một van hút, một xy lanh lên/xuống và một cảm biến áp suất.
 
-The robot has exactly ONE End Effector (see rcs2/devices/end_effector.py). This module is its "heads" tool: N identical
-head units (8 on the real tool). All of it is wired to the I/O of the FANUC controller, so it is driven through the bridge
-(`io.read` / `io.write`, see rcs2/robot/client.py). Nothing is hard-coded: every head names its own I/O in
+Robot có đúng MỘT End Effector (xem rcs2/devices/end_effector.py). Module này là tool "heads" của nó: N cụm tay
+giống nhau (8 trên tool thật). Tất cả nối vào I/O của controller FANUC, nên được điều khiển qua bridge
+(`io.read` / `io.write`, xem rcs2/robot/client.py). Không có gì cố định trong code: mỗi tay tự khai báo I/O của nó trong
 settings.json -> "end_effector" -> "heads":
 
     "heads": {
@@ -10,27 +10,27 @@ settings.json -> "end_effector" -> "heads":
       "units": [
         {"vacuum": "RDO[1]", "cylinder": "RDO[9]",  "pressure": "RDI[1]"},
         {"vacuum": "RDO[2]", "cylinder": "RDO[10]", "pressure": "RDI[2]"},
-        ... one entry per head (8 for the real End Effector) ...
+        ... mỗi tay một mục (8 với End Effector thật) ...
       ],
       "cylinder_s": 0.6, "vacuum_s": 0.3, "pressure_timeout_s": 1.0,
       "pressure_active": 1, "cylinder_down": 1
     }
 
-Two kinds of cylinder valve:
-  single output   "cylinder": "RDO[9]"                      one coil + spring return: the output level says down / up (`cylinder_down`)
-  double coil     "coil_down": "RDO[9]", "coil_up": "RDO[17]"   a bistable 5/2 valve with two coils: energise ONE coil to move, the other one
-                  is switched off first (both coils are never on together). `coil_active` (default 1) = level that energises a coil;
-                  `coil_pulse_s` > 0 = energise only that long (a pulse) and then switch both off; 0 (default) = keep the coil energised.
-Per head, optional extras: "cyl_down" and "cyl_up" = input of the cylinder end-position sensors (the two ends of the stroke). When both
-exist the cylinder step waits for the sensor instead of a fixed time ("cylinder_timeout_s", default 2 s) and reports a cylinder that
-does not arrive (alarm 9203). Use them: the fixed time `cylinder_s` is a guess, the sensor is the fact.
+Hai loại van xy lanh:
+  một ngõ ra       "cylinder": "RDO[9]"                      một coil + lò xo hồi: mức ngõ ra cho biết xuống / lên (`cylinder_down`)
+  hai coil         "coil_down": "RDO[9]", "coil_up": "RDO[17]"   van 5/2 giữ vị trí có hai coil: cấp điện MỘT coil để chạy, coil kia
+                  được tắt trước (không bao giờ bật cả hai cùng lúc). `coil_active` (mặc định 1) = mức cấp điện cho coil;
+                  `coil_pulse_s` > 0 = chỉ cấp điện trong khoảng đó (một xung) rồi tắt cả hai; 0 (mặc định) = giữ coil có điện.
+Mỗi tay có thể thêm: "cyl_down" và "cyl_up" = ngõ vào cảm biến cuối hành trình của xy lanh (hai đầu hành trình). Khi có cả hai,
+bước xy lanh chờ theo cảm biến thay vì chờ thời gian cố định ("cylinder_timeout_s", mặc định 2 s) và báo xy lanh nào
+không tới nơi (alarm 9203). Nên dùng: thời gian cố định `cylinder_s` chỉ là ước đoán, cảm biến mới là thực tế.
 
-Meaning of the values (change them to match the wiring):
-  vacuum output        1 = valve on (suction)          cylinder output  `cylinder_down` (default 1) = head down
-  pressure input       `pressure_active` (default 1) = product held (vacuum reached)
+Ý nghĩa các giá trị (sửa cho khớp với dây):
+  ngõ ra vacuum        1 = van bật (hút)               ngõ ra cylinder  `cylinder_down` (mặc định 1) = tay đi xuống
+  ngõ vào pressure     `pressure_active` (mặc định 1) = đã giữ được sản phẩm (đạt chân không)
 
-Used by the sequence steps  {"ee": "heads", "vacuum": "on", "heads": "all"},  {"ee": "heads", "cylinder": "down"},
-{"ee": "heads", "check": "hold"}  and by the Manual window. A failed step raises HeadError (alarm 9203).
+Được dùng bởi các bước sequence  {"ee": "heads", "vacuum": "on", "heads": "all"},  {"ee": "heads", "cylinder": "down"},
+{"ee": "heads", "check": "hold"}  và bởi cửa sổ Thủ công. Bước lỗi ném HeadError (alarm 9203).
 """
 import logging
 import re
@@ -44,7 +44,7 @@ _REF = re.compile(r"^\s*([A-Za-z]+)\s*\[\s*(\d+)\s*\]\s*$")
 
 
 class HeadError(Exception):
-    """A head action failed (bad configuration, I/O error, head did not pick up / release, cylinder stuck)."""
+    """Thao tác tay hút bị lỗi (cấu hình sai, lỗi I/O, tay không hút / nhả được, xy lanh bị kẹt)."""
 
 
 def parse_io(text):
@@ -64,8 +64,8 @@ class Head:
         self.n = n
         self.vacuum = parse_io(cfg["vacuum"])
         self.cylinder = parse_io(cfg["cylinder"]) if cfg.get("cylinder") else None
-        self.coil_down = parse_io(cfg["coil_down"]) if cfg.get("coil_down") else None       # double coil valve: the "down" coil
-        self.coil_up = parse_io(cfg["coil_up"]) if cfg.get("coil_up") else None             # ... and the "up" coil
+        self.coil_down = parse_io(cfg["coil_down"]) if cfg.get("coil_down") else None       # van hai coil: coil "xuống"
+        self.coil_up = parse_io(cfg["coil_up"]) if cfg.get("coil_up") else None             # ... và coil "lên"
         if (self.coil_down is None) != (self.coil_up is None):
             raise ValueError("đầu %d: van 2 coil cần khai báo cả coil_down và coil_up" % n)
         if self.coil_down is not None and self.cylinder is not None:
@@ -76,7 +76,7 @@ class Head:
 
 
 def _runs(refs):
-    """[(kind, index), ...] -> [(kind, first_index, [refs...])]: contiguous indexes of one kind in one call."""
+    """[(kind, index), ...] -> [(kind, first_index, [refs...])]: các chỉ số liên tiếp cùng loại trong một lần gọi."""
     out = []
     for ref in sorted(set(refs)):
         if out and out[-1][0] == ref[0] and out[-1][1] + len(out[-1][2]) == ref[1]:
@@ -87,7 +87,7 @@ def _runs(refs):
 
 
 class HeadBank:
-    """All suction heads of the End Effector (acts on every head, or on a chosen subset)."""
+    """Tất cả tay hút của End Effector (thao tác trên mọi tay, hoặc trên một nhóm được chọn)."""
 
     def __init__(self, heads, io, enabled=True, cylinder_s=0.6, vacuum_s=0.3, pressure_timeout_s=1.0,
                  pressure_active=1, cylinder_down=1, cylinder_timeout_s=2.0, sleep=time.sleep, coil_active=1, coil_pulse_s=0.0):
@@ -95,14 +95,14 @@ class HeadBank:
         self.cylinder_s, self.vacuum_s = float(cylinder_s), float(vacuum_s)
         self.pressure_timeout_s, self.cylinder_timeout_s = float(pressure_timeout_s), float(cylinder_timeout_s)
         self.pressure_active, self.cylinder_down = int(pressure_active), int(cylinder_down)
-        self.coil_active, self.coil_pulse_s = int(coil_active), float(coil_pulse_s)         # double coil valves only
+        self.coil_active, self.coil_pulse_s = int(coil_active), float(coil_pulse_s)         # chỉ dành cho van hai coil
         self.sleep = sleep
         self._lock = threading.RLock()
 
-    # ---- construction ------------------------------------------------------------------------ #
+    # ---- dựng từ cấu hình ------------------------------------------------------------------- #
     @classmethod
     def from_config(cls, cfg, io):
-        """cfg = settings["end_effector"]["heads"]. Raises HeadError for a bad entry."""
+        """cfg = settings["end_effector"]["heads"]. Ném HeadError khi một mục khai báo sai."""
         try:
             heads = [Head(i, h) for i, h in enumerate(cfg["units"], 1)]
             if not heads:
@@ -119,7 +119,7 @@ class HeadBank:
         return len(self.heads)
 
     def select(self, heads=None):
-        """'all' / None -> every head, or a list of head numbers (1-based)."""
+        """'all' / None -> mọi tay, hoặc danh sách số thứ tự tay (bắt đầu từ 1)."""
         if heads in (None, "all"):
             return list(self.heads)
         if not isinstance(heads, (list, tuple)) or not heads or any(
@@ -131,9 +131,9 @@ class HeadBank:
         if not self.enabled:
             raise HeadError("đầu hút của End Effector đang tắt (heads.enabled: false trong settings.json)")
 
-    # ---- I/O through the bridge -------------------------------------------------------------------- #
+    # ---- I/O qua bridge --------------------------------------------------------------------------------- #
     def _write(self, items):
-        """items: [(ref, 0|1)]. One io.write per contiguous run; the outputs are read back and compared."""
+        """items: [(ref, 0|1)]. Mỗi dãy liên tiếp một lần io.write; ngõ ra được đọc lại và so sánh."""
         values = {}
         for ref, v in items:
             values[ref] = int(v)
@@ -159,9 +159,9 @@ class HeadBank:
                 out[ref] = int(v)
         return out
 
-    # ---- actions --------------------------------------------------------------------------------------- #
+    # ---- thao tác -------------------------------------------------------------------------------------- #
     def vacuum_set(self, on, heads=None):
-        """Valve on/off for the selected heads. After switching on, waits `vacuum_s` for the vacuum to build."""
+        """Bật / tắt van của các tay được chọn. Sau khi bật, chờ `vacuum_s` cho chân không tạo thành."""
         self._need_enabled()
         with self._lock:
             sel = self.select(heads)
@@ -171,7 +171,7 @@ class HeadBank:
                 self.sleep(self.vacuum_s)
 
     def cylinder_set(self, down, heads=None):
-        """Heads down / up. Waits for the end-position sensors when every selected head has them, else `cylinder_s`."""
+        """Hạ / nâng tay. Chờ cảm biến cuối hành trình khi mọi tay được chọn đều có, nếu không thì chờ `cylinder_s`."""
         self._need_enabled()
         with self._lock:
             sel = [h for h in self.select(heads) if h.has_cylinder]
@@ -179,7 +179,7 @@ class HeadBank:
                 raise HeadError("End Effector: các đầu được chọn không có xy lanh")
             level = self.cylinder_down if down else 1 - self.cylinder_down
             idle = 1 - self.coil_active
-            switch_off, switch_on = [], []                                # double coil valves: the other coil first, never both on
+            switch_off, switch_on = [], []                                # van hai coil: tắt coil kia trước, không bao giờ bật cả hai
             for h in sel:
                 if h.coil_down is not None:
                     on, off = (h.coil_down, h.coil_up) if down else (h.coil_up, h.coil_down)
@@ -188,7 +188,7 @@ class HeadBank:
             if switch_off:
                 self._write(switch_off)
             self._write([(h.cylinder, level) for h in sel if h.cylinder is not None] + switch_on)
-            if switch_on and self.coil_pulse_s > 0:                       # a pulse is enough for a bistable valve
+            if switch_on and self.coil_pulse_s > 0:                       # với van giữ vị trí chỉ cần một xung
                 self.sleep(self.coil_pulse_s)
                 self._write([(ref, idle) for ref, _ in switch_on])
             log.info("heads: cylinder %s heads %s", "DOWN" if down else "up", [h.n for h in sel])
@@ -211,7 +211,7 @@ class HeadBank:
             self.sleep(0.03)
 
     def pressure(self, heads=None):
-        """{head number: True (holding) / False / None (no sensor)}."""
+        """{số tay: True (đang giữ) / False / None (không có cảm biến)}."""
         self._need_enabled()
         with self._lock:
             sel = self.select(heads)
@@ -219,8 +219,8 @@ class HeadBank:
             return {h.n: (None if h.pressure is None else state[h.pressure] == self.pressure_active) for h in sel}
 
     def check(self, hold=True, heads=None, timeout_s=None):
-        """Wait until every selected head (with a sensor) holds the product (hold=True) or has released it.
-        Raises HeadError naming the heads that did not make it within `timeout_s`."""
+        """Chờ tới khi mọi tay được chọn (có cảm biến) giữ được sản phẩm (hold=True) hoặc đã nhả ra.
+        Ném HeadError ghi rõ tay nào chưa làm được trong `timeout_s`."""
         self._need_enabled()
         timeout_s = self.pressure_timeout_s if timeout_s is None else float(timeout_s)
         with self._lock:
@@ -240,7 +240,7 @@ class HeadBank:
                 self.sleep(0.03)
 
     def _is_down(self, h, state):
-        """Is the head down? The end-position sensor tells it; without one the level of the output(s) does (None = no cylinder)."""
+        """Tay có đang ở dưới không? Cảm biến cuối hành trình cho biết; không có cảm biến thì dựa vào mức ngõ ra (None = không có xy lanh)."""
         if h.cyl_down is not None:
             return state[h.cyl_down] == 1
         if h.coil_down is not None:
@@ -248,7 +248,7 @@ class HeadBank:
         return None if h.cylinder is None else state[h.cylinder] == self.cylinder_down
 
     def status(self):
-        """Everything for the Manual window in one go: [{n, vacuum, cylinder, hold}] (None = no such I/O)."""
+        """Mọi thông tin cho cửa sổ Thủ công trong một lần: [{n, vacuum, cylinder, hold}] (None = không có I/O đó)."""
         self._need_enabled()
         with self._lock:
             refs = [r for h in self.heads for r in (h.vacuum, h.cylinder, h.coil_down, h.cyl_down, h.pressure) if r is not None]

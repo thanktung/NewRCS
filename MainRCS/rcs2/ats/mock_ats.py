@@ -1,15 +1,15 @@
-"""Mock ATS program (stands in for a fixture while developing / testing NewRCS).
+"""Chương trình ATS giả (đóng vai một fixture khi phát triển / test NewRCS).
 
     python -m rcs2.ats.mock_ats --port 8888 --test-time 3 --pass-rate 0.9
 
-Behaviour (modelled on the old ADSServer + a typical ATS):
-  * accepts one RCS connection, drops it when no heartbeat arrives for 4 s (if --watchdog)
-  * on connect: sends TtoC_resultWaitdut (fixture is ready for a DUT)
+Hành vi (theo ADSServer cũ + một ATS điển hình):
+  * nhận một kết nối RCS, ngắt nó nếu 4 s không có heartbeat (khi có --watchdog)
+  * khi kết nối: gửi TtoC_resultWaitdut (fixture sẵn sàng nhận DUT)
   * B1=<SN>,            -> TtoC_readcodeOK
-  * CtoT_placeDUTOK     -> TtoC_startOK, then after --test-time: Pass / NG+item+value / Retest
+  * CtoT_placeDUTOK     -> TtoC_startOK, rồi sau --test-time: Pass / NG+item+value / Retest
   * CtoT_placeBarcode   -> TtoC_BarcodePass+<SN>
   * DUT_OUT             -> TtoC_resultWaitdut
-  * f_open / f_close    -> fix_open / fix_close ; fixstatus -> current fix_xxx
+  * f_open / f_close    -> fix_open / fix_close ; fixstatus -> fix_xxx hiện tại
 """
 import argparse
 import logging
@@ -32,9 +32,9 @@ class MockAts:
         self.pass_rate = pass_rate
         self.retest_rate = retest_rate
         self.ng_item, self.ng_value = ng_item, ng_value
-        self.watchdog_s = watchdog_s            # 0 = do not drop silent clients
-        self.forced_results = []                # e.g. ["NG", "PASS"] consumed first
-        self.received = []                      # every non-heartbeat frame, for assertions
+        self.watchdog_s = watchdog_s            # 0 = không ngắt client im lặng
+        self.forced_results = []                # ví dụ ["NG", "PASS"], được dùng trước
+        self.received = []                      # mọi khung không phải heartbeat, để kiểm tra trong test
         self.fixture_state = "fix_open"
         self.current_sn = ""
         self._rng = random.Random(seed)
@@ -45,7 +45,7 @@ class MockAts:
         self._thread = None
         self._last_beat = time.monotonic()
 
-    # ---- lifecycle ------------------------------------------------------ #
+    # ---- vòng đời ------------------------------------------------------- #
     def start(self):
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -75,7 +75,7 @@ class MockAts:
                 pass
             conn.close()
 
-    # ---- network -------------------------------------------------------- #
+    # ---- mạng ----------------------------------------------------------- #
     def _accept_loop(self):
         while not self._stop.is_set():
             try:
@@ -84,7 +84,7 @@ class MockAts:
                 continue
             except OSError:
                 return
-            self._drop_connection()                 # a new RCS replaces the old one
+            self._drop_connection()                 # RCS mới thay cho RCS cũ
             with self._conn_lock:
                 self._conn = conn
             self._last_beat = time.monotonic()
@@ -125,7 +125,7 @@ class MockAts:
         except OSError:
             pass
 
-    # ---- behaviour ------------------------------------------------------ #
+    # ---- hành vi -------------------------------------------------------- #
     def _handle(self, frame, conn):
         low = frame.lower()
         if "aaa" in low:

@@ -1,5 +1,5 @@
 """The one-file cell simulator (bridge32/bridge_simple.py): fixtures' ATS programs, barcode scanner, robot stations,
-the command line, and NewRCS itself running a whole load / test / unload cycle against it."""
+the command line (NewRCS running the tray flow against it: tests/simulator/test_sim_flow.py)."""
 import copy
 import json
 import os
@@ -12,12 +12,8 @@ from tests.support import bridge as helpers
 import bridge_simple as BS
 from rcs2.ats import protocol as AP
 from rcs2.ats.client import AtsClient
-from rcs2.config import DEFAULTS
-from rcs2.core import engine as E
-from rcs2.core.sequence import save_sequences
 from rcs2.devices import scanner as SC
 from rcs2.robot.client import BridgeClient, RobotError
-from rcs2.runtime import Runtime
 
 
 def wait_until(cond, timeout=15.0, what="condition"):
@@ -295,87 +291,6 @@ class CommandLineTests(unittest.TestCase):
                                       "--fixture-port-base", str(port), "--no-scanner"]), 1)
         finally:
             s.close()
-
-
-class NewRcsEndToEndTests(unittest.TestCase):
-    """The real NewRCS (Runtime + Engine + End Effector + ATS clients + bridge client) against the simulator."""
-
-    def setUp(self):
-        cfg = copy.deepcopy(BS.DEFAULTS)
-        cfg.update({"status_s": 0.1, "poll_s": 0.01, "sim_delay_s": 0.04, "sim_scan_s": 0.01, "allow": ["*"],
-                    "sim_test_time_s": 0.3, "sim_test_step_s": 0.0, "sim_seed": 3, "sim_pass_rate": 0.0,
-                    "sim_strict_stations": True,
-                    "sim_fixtures": {"1": {"port": 0, "station": 1}, "2": {"port": 0, "station": 2}},
-                    "sim_scanner": {"port": 0, "read_s": 0.02, "no_read_rate": 0.0, "prefix": "SIM"}})
-        self.bridge = BS.Bridge(cfg, sim=True)
-        self.cell = BS.Cell(self.bridge, cfg, "127.0.0.1").start()
-        self.server = BS.Server(("127.0.0.1", 0), BS.Handler)
-        self.server.bridge = self.bridge
-        threading.Thread(target=self.server.serve_forever, daemon=True).start()
-
-        self.tmp = tempfile.TemporaryDirectory()
-        s = copy.deepcopy(DEFAULTS)
-        s["outbox_path"] = "outbox.sqlite"
-        s["engine"]["sequences_path"] = "sequences.json"
-        s["engine"]["test_timeout_s"] = 20
-        s["bridge"].update({"host": "127.0.0.1", "port": self.server.server_address[1], "default_override": 10})
-        s["ats"]["fixtures"] = dict((str(n), {"host": "127.0.0.1", "port": self.cell.fixtures[n].port,
-                                              "station": "Station1", "robot_station": n}) for n in (1, 2))
-        s["ats"].update({"heartbeat_s": 0.1, "retry_s": 0.2})
-        s["end_effector"] = {
-            "heads": {"enabled": True, "cylinder_s": 0.01, "vacuum_s": 0.01, "pressure_timeout_s": 0.5,
-                      "units": [{"vacuum": "RDO[%d]" % n, "cylinder": "RDO[%d]" % (8 + n), "pressure": "RDI[%d]" % n}
-                                for n in range(1, 9)]},
-            "scanner": {"type": "tcp", "host": "127.0.0.1", "port": self.cell.scanner.port, "length": 14, "retry": 1,
-                        "timeout_s": 1.0},
-            "laser": {"enabled": True, "ok": "RDI[20]", "timeout_s": 0.5}}
-        pose = [100.0, 0.0, 200.0, 180.0, 0.0, 0.0]
-        points = dict((n, list(pose)) for n in ("above_input", "above_pass", "above_ng",
-                                                "above_fixture_1", "above_fixture_2"))
-        load = [{"robot": "move", "pose": "above_input"}, {"ee": "scanner"},
-                {"ee": "heads", "cylinder": "down"}, {"ee": "heads", "vacuum": "on"}, {"ee": "heads", "cylinder": "up"},
-                {"ee": "heads", "check": "hold", "timeout_s": 0.5}, {"ee": "laser", "check": "ok"},
-                {"robot": "get", "station": 0}, {"robot": "move", "pose": "above_fixture_{fixture}"},
-                {"robot": "put", "station": "{robot_station}"}, {"ee": "heads", "vacuum": "off"}]
-        seqs = {"load": load,
-                "unload_pass": [{"robot": "move", "pose": "above_fixture_{fixture}"},
-                                {"robot": "get", "station": "{robot_station}"}, {"robot": "move", "pose": "above_pass"},
-                                {"robot": "put", "station": 20}],
-                "unload_ng": [{"robot": "move", "pose": "above_fixture_{fixture}"},
-                              {"robot": "get", "station": "{robot_station}"}, {"robot": "move", "pose": "above_ng"},
-                              {"robot": "put", "station": 21}]}
-        save_sequences(os.path.join(self.tmp.name, "sequences.json"), {"points": points, "sequences": seqs})
-        s["trays"] = {"input": {"rows": 1, "cols": 3}, "ng": {"rows": 1, "cols": 3}}
-        self.rt = Runtime(s, self.tmp.name)
-        self.rt.start()
-
-    def tearDown(self):
-        self.rt.stop()
-        self.cell.stop()
-        self.server.shutdown()
-        self.bridge.stop()
-        self.server.server_close()
-        self.tmp.cleanup()
-
-    def snap(self):
-        return self.rt.engine.snapshot()
-
-    def test_load_test_unload_cycles_on_two_fixtures_until_the_input_tray_is_empty(self):
-        eng = self.rt.engine
-        wait_until(lambda: self.snap()["robot"].get("connected"), what="robot link")
-        wait_until(lambda: all(f["connected"] for f in self.snap()["fixtures"]), what="both fixtures connected")
-        for n in (1, 2):
-            eng.set_enabled(n, True)
-        eng.start_run()
-        # pass_rate 0: every DUT is NG -> the NG tray fills while the 3 DUTs of the input tray are used up
-        wait_until(lambda: self.snap()["trays"]["input"]["exhausted"], timeout=40, what="input tray empty")
-        wait_until(lambda: self.snap()["trays"]["ng"]["count"] == 3, timeout=40, what="3 NG in the NG tray")
-        snap = self.snap()
-        self.assertEqual(snap["run_state"], E.RUNNING, snap["fault_text"])
-        self.assertEqual(sum(f["total"] for f in snap["fixtures"]), 3)
-        self.assertEqual(self.bridge.com.robot.state()["stations"], {21: 3})        # all three ended in the NG bin
-        self.assertEqual(self.cell.scanner.reads, 3)
-        self.assertTrue(all(f["sn"] == "" or len(f["sn"]) == 14 for f in snap["fixtures"]))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 """UI smoke test (offscreen): login dialog, enabling of controls, a short automatic run."""
-import copy
 import os
 import tempfile
 import time
@@ -14,7 +13,6 @@ try:
 except ImportError:             # pragma: no cover
     HAVE_QT = False
 
-from rcs2.config import DEFAULTS
 
 
 def pump(app, seconds, until=None):
@@ -32,15 +30,17 @@ class UiSmokeTest(unittest.TestCase):
     def test_login_then_run(self):
         from rcs2.ui.windows.login_dialog import LoginDialog
         from rcs2.ui.windows.main_window import MainWindow
-        from rcs2.tools.demo import DEMO_POINTS, DEMO_SEQUENCES, start_demo
+        from rcs2.tools.demo import sample_flow_points, start_demo
+        from tests.support.engine import tray_settings
         from rcs2.runtime import Runtime
 
         app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         tmp = tempfile.mkdtemp()
-        base = copy.deepcopy(DEFAULTS)
+        base = tray_settings()
+        base["trays"]["input"] = {"rows": 2, "cols": 4}
         base["outbox_path"] = os.path.join(tmp, "outbox.sqlite")
         cfg, stop_demo = start_demo(base, fixtures=2, speed=0.02, test_time=(0.2, 0.1))
-        rt = Runtime(cfg, tmp, {"points": DEMO_POINTS, "sequences": DEMO_SEQUENCES, "example": True})
+        rt = Runtime(cfg, tmp, {"points": sample_flow_points(cfg), "example": True})
         win = MainWindow(rt, cfg, require_login=True, columns=2)
         rt.start()
         win.show()

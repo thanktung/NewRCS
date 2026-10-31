@@ -3,7 +3,7 @@
 ## Làm gì / không làm gì
 - **Làm:** giữ **giá trị mặc định** của mọi cài đặt (`defaults.py`) và nạp `config/settings.json` đè lên mặc định (`loader.py`).
 - **Không làm:** không kiểm tra ý nghĩa của từng cài đặt. Mỗi module tự kiểm tra phần của mình khi khởi động
-  (`core/tray.build_trays`, `robot/uop.normalize`, `devices/end_effector.build_end_effector`, `core/sequence.validate`...).
+  (`core/tray.build_trays`, `robot/uop.normalize`, `devices/end_effector.build_end_effector`, `core/flow.FlowSettings`, `core/sequence.validate`...).
 - Không import module nào khác của `rcs2` (xem quy tắc phụ thuộc ở `MainRCS/README.md`).
 
 ## File

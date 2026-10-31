@@ -1,36 +1,36 @@
-"""Start / stop the robot program RSR0001 through the UOP signals of the FANUC controller (UI / UO [1-18]).
+"""Chạy / dừng chương trình robot RSR0001 qua tín hiệu UOP của controller FANUC (UI / UO [1-18]).
 
-The UI signals are mapped to the standard digital inputs with the SAME index (UI[n] = SDI[n]), so they are driven with
-`io.write` on kind SDI through the bridge (it needs the bridge to be armed, see rcs2/robot/client.py). The UO signals are only
-read (kind UO, no arm needed).
+Tín hiệu UI được map sang ngõ vào số chuẩn có CÙNG chỉ số (UI[n] = SDI[n]), nên được điều khiển bằng
+`io.write` loại SDI qua bridge (cần bridge đang arm, xem rcs2/robot/client.py). Tín hiệu UO chỉ
+được đọc (loại UO, không cần arm).
 
-    UI[1] IMSTP  UI[2] HOLD  UI[3] SFSPD   must be ON (they are "always ON" inputs: ON = not stopped / not held)
-    UI[8] ENBL                             must be ON so that the program is allowed to run
-    UI[9] RSR1                             pulse = select RSR0001   (RSR n -> UI[8 + n])
-    UI[5] RESET                            pulse = reset the fault, then UO[6] FAULT must be OFF
-    UI[6] START                            pulse = start the selected program, then UO[3] PROGRUN must turn ON
+    UI[1] IMSTP  UI[2] HOLD  UI[3] SFSPD   phải BẬT (là ngõ vào "luôn BẬT": BẬT = không dừng / không giữ)
+    UI[8] ENBL                             phải BẬT thì chương trình mới được chạy
+    UI[9] RSR1                             xung = chọn RSR0001   (RSR n -> UI[8 + n])
+    UI[5] RESET                            xung = reset lỗi, sau đó UO[6] FAULT phải TẮT
+    UI[6] START                            xung = chạy chương trình đã chọn, sau đó UO[3] PROGRUN phải BẬT
 
-Sequence of `RobotStarter.start()` (the order the cell was commissioned with):
-    0. UO[3] PROGRUN already ON  -> nothing to do
+Trình tự của `RobotStarter.start()` (thứ tự lúc chạy thử nghiệm thu cell):
+    0. UO[3] PROGRUN đã BẬT      -> không cần làm gì
     1. SDI[1..3] = 1, SDI[8] = 1
-    2. pulse SDI[9]   (select RSR0001)
-    3. pulse SDI[5]   (reset), wait for UO[6] = 0            -> StartError "robot còn lỗi" otherwise
-    4. pulse SDI[6]   (start), wait for UO[3] = 1            -> StartError "chương trình chưa chạy" otherwise
-A pulse is "write 1, wait `pulse_s`, write 0" and the 0 is written even when something fails in between.
+    2. xung SDI[9]   (chọn RSR0001)
+    3. xung SDI[5]   (reset), chờ UO[6] = 0            -> nếu không thì StartError "robot còn lỗi"
+    4. xung SDI[6]   (start), chờ UO[3] = 1            -> nếu không thì StartError "chương trình chưa chạy"
+Một xung là "ghi 1, chờ `pulse_s`, ghi 0", và số 0 vẫn được ghi kể cả khi có lỗi ở giữa.
 
-Sequence of `RobotStarter.stop()` (works at any time, also while a run or a start is in progress):
-    1. pulse SDI[4] (CSTOPI)           cycle stop: the running program is ended
-    2. SDI[1], SDI[2], SDI[3] = 0      IMSTP, HOLD, SFSPD off: the robot stops and cannot be started
-       (step 2 is done even if step 1 failed; any failure is reported and says to use the E-stop)
-    3. wait for UO[3] PROGRUN = 0      -> StopError "robot chưa dừng" otherwise
-A start sequence that is running at the same time is aborted. Starting again (step 1 of the start) switches SDI[1..3] on again.
-UI[4] CSTOPI (cycle stop) and UI[5] RESET (reset fault) are two separate signals.
+Trình tự của `RobotStarter.stop()` (dùng được bất cứ lúc nào, kể cả khi đang chạy hoặc đang khởi động):
+    1. xung SDI[4] (CSTOPI)           cycle stop: chương trình đang chạy được kết thúc
+    2. SDI[1], SDI[2], SDI[3] = 0      tắt IMSTP, HOLD, SFSPD: robot dừng và không chạy lại được
+       (bước 2 vẫn làm kể cả khi bước 1 lỗi; mọi lỗi đều được báo kèm lời nhắc dùng E-stop)
+    3. chờ UO[3] PROGRUN = 0          -> nếu không thì StopError "robot chưa dừng"
+Một trình tự khởi động đang chạy cùng lúc sẽ bị hủy. Khởi động lại (bước 1 của start) bật lại SDI[1..3].
+UI[4] CSTOPI (cycle stop) và UI[5] RESET (reset lỗi) là hai tín hiệu khác nhau.
 
-settings.json -> "robot_start" (all optional, these are the defaults):
+settings.json -> "robot_start" (đều tùy chọn, đây là giá trị mặc định):
     {"rsr": 1, "pulse_s": 0.3, "reset_wait_s": 3.0, "run_wait_s": 5.0, "stop_wait_s": 3.0, "poll_s": 0.05, "monitor_s": 0.5}
 
-`monitor_s`: how often NewRCS reads UO[3] PROGRUN to know whether the robot program is running (BridgeClient.program_state).
-Nothing that writes R[1] (motions, safe position, jog, sequences) is allowed while it is OFF.
+`monitor_s`: chu kỳ NewRCS đọc UO[3] PROGRUN để biết chương trình robot có đang chạy không (BridgeClient.program_state).
+Mọi thứ ghi R[1] (chuyển động, vị trí an toàn, jog, sequence) đều bị chặn khi nó TẮT.
 """
 import logging
 import threading
@@ -38,7 +38,7 @@ import time
 
 log = logging.getLogger("rcs2.uop")
 
-KIND_IN, KIND_OUT = "SDI", "UO"            # UI[n] is driven as SDI[n]; UO[n] is read as UO[n]
+KIND_IN, KIND_OUT = "SDI", "UO"            # UI[n] được điều khiển dưới dạng SDI[n]; UO[n] được đọc dưới dạng UO[n]
 
 UI_IMSTP, UI_HOLD, UI_SFSPD, UI_CSTOPI, UI_RESET, UI_START, UI_ENBL, UI_RSR_BASE = 1, 2, 3, 4, 5, 6, 8, 8
 UO_CMDENBL, UO_SYSRDY, UO_PROGRUN, UO_FAULT, UO_TPENBL = 1, 2, 3, 6, 8
@@ -49,15 +49,15 @@ DEFAULTS = {"rsr": 1, "pulse_s": 0.3, "reset_wait_s": 3.0, "run_wait_s": 5.0, "s
 
 
 class StartError(Exception):
-    """The robot program could not be started (bad configuration, I/O failure, fault not cleared, program not running)."""
+    """Không chạy được chương trình robot (cấu hình sai, lỗi I/O, chưa xóa được lỗi, chương trình không chạy)."""
 
 
 class StopError(StartError):
-    """The robot could not be stopped for sure (I/O failure, program still running): use the E-stop."""
+    """Không chắc chắn đã dừng được robot (lỗi I/O, chương trình vẫn chạy): hãy dùng E-stop."""
 
 
 def normalize(cfg):
-    """settings["robot_start"] -> complete, validated dict. Raises StartError."""
+    """settings["robot_start"] -> dict đầy đủ, đã kiểm tra. Ném StartError."""
     out = dict(DEFAULTS)
     out.update({k: v for k, v in (cfg or {}).items() if not str(k).startswith("_")})
     rsr = out["rsr"]
@@ -71,10 +71,10 @@ def normalize(cfg):
 
 
 class RobotStarter:
-    """`io` = BridgeClient-like (io_read / io_write)."""
+    """`io` = đối tượng giống BridgeClient (io_read / io_write)."""
 
     def __init__(self, io, cfg=None, sleep=time.sleep, clock=time.monotonic, log_fn=None, abort=None):
-        """`abort` = threading.Event shared by the starter and the stopper: stop() sets it, a running start() gives up."""
+        """`abort` = threading.Event dùng chung cho bộ chạy và bộ dừng: stop() đặt nó, start() đang chạy sẽ bỏ dở."""
         self.io, self.sleep, self.clock = io, sleep, clock
         self.abort = abort if abort is not None else threading.Event()
         self.cfg = normalize(cfg)
@@ -85,7 +85,7 @@ class RobotStarter:
 
     # ---- I/O ------------------------------------------------------------------------------------ #
     def _write(self, index, values):
-        """SDI[index...] = values, read back and compared."""
+        """SDI[index...] = values, đọc lại và so sánh."""
         try:
             back = self.io.io_write(KIND_IN, index, list(values))
         except Exception as ex:
@@ -104,7 +104,7 @@ class RobotStarter:
         try:
             self.sleep(self.cfg["pulse_s"])
         finally:
-            self._write(index, [0])                    # never leave the input ON
+            self._write(index, [0])                    # không bao giờ để ngõ vào BẬT
 
     def _check_abort(self):
         if self.abort.is_set():
@@ -122,7 +122,7 @@ class RobotStarter:
             self.sleep(self.cfg["poll_s"])
 
     def _diag(self):
-        """UO[1..8] for the error message ('' when it cannot be read)."""
+        """UO[1..8] cho thông báo lỗi ('' khi không đọc được)."""
         try:
             vals = self.io.io_read(KIND_OUT, 1, 8)
         except Exception:
@@ -131,9 +131,9 @@ class RobotStarter:
                           if i - 1 < len(vals))
         return " (%s)" % shown
 
-    # ---- the sequence ------------------------------------------------------------------------------ #
+    # ---- trình tự ----------------------------------------------------------------------------------- #
     def start(self):
-        """Runs the sequence; returns a short result text. Raises StartError."""
+        """Chạy trình tự; trả về một câu kết quả ngắn. Ném StartError."""
         if not self._lock.acquire(False):
             raise StartError("đang có một lần khởi động chương trình khác")
         try:
@@ -148,7 +148,7 @@ class RobotStarter:
             return "%s đã đang chạy" % name
         say("bật UI[%d] IMSTP, UI[%d] HOLD, UI[%d] SFSPD và UI[%d] ENBL" % (UI_IMSTP, UI_HOLD, UI_SFSPD, UI_ENBL))
         self._check_abort()
-        self._write(UI_IMSTP, [1, 1, 1])               # SDI[1..3] in one write
+        self._write(UI_IMSTP, [1, 1, 1])               # SDI[1..3] trong một lần ghi
         self._write(UI_ENBL, [1])
         say("xung UI[%d] RSR%d: chọn chương trình %s" % (self.select_bit, self.cfg["rsr"], name))
         self._check_abort()
@@ -167,12 +167,12 @@ class RobotStarter:
                              % (name, UO_PROGRUN, self.cfg["run_wait_s"], self._diag()))
         return "%s đang chạy" % name
 
-    # ---- stop --------------------------------------------------------------------------------------- #
+    # ---- dừng --------------------------------------------------------------------------------------- #
     def stop(self):
-        """Pulse SDI[4] CSTOPI, switch SDI[1..3] off, check UO[3] PROGRUN = 0. Raises StopError. Never refuses to run
-        (no lock, no guard): stopping must always be possible."""
+        """Xung SDI[4] CSTOPI, tắt SDI[1..3], kiểm tra UO[3] PROGRUN = 0. Ném StopError. Không bao giờ từ chối chạy
+        (không khóa, không chặn): dừng robot phải luôn làm được."""
         say = self._log
-        self.abort.set()                               # a start that is running gives up at its next step
+        self.abort.set()                               # một lần start đang chạy sẽ bỏ dở ở bước kế tiếp
         problems = []
         say("xung UI[%d] CSTOPI: dừng chương trình" % UI_CSTOPI)
         try:
@@ -181,7 +181,7 @@ class RobotStarter:
             problems.append(str(ex))
         say("tắt UI[%d] IMSTP, UI[%d] HOLD, UI[%d] SFSPD" % (UI_IMSTP, UI_HOLD, UI_SFSPD))
         try:
-            self._write(UI_IMSTP, [0, 0, 0])           # done even when the pulse failed
+            self._write(UI_IMSTP, [0, 0, 0])           # vẫn làm kể cả khi xung bị lỗi
         except StartError as ex:
             problems.append(str(ex))
         if problems:

@@ -1,16 +1,16 @@
-"""Employee lookup through the ESD web service + the login rules (card number -> department -> level).
+"""Tra cứu nhân viên qua web service ESD + quy tắc đăng nhập (mã thẻ -> bộ phận -> cấp).
 
-Login flow
-  1. username = the 8-character card number, password = the shared default password (DEFAULT_PASSWORD,
-     can be overridden by "default_password" in the departments file)
-  2. card id -> SOAP IsAuthorizedMeasuredESDEmp_NEW -> "ID_Name_Dept_Status"
-  3. the DEPARTMENT code (e.g. MNM561, MNM571) is looked up in the departments file
-     (config/departments.json) which gives the access level 1..5 (5 = highest).
-     A department that is not listed gets "default_level" (0 = login refused).
-The file is read again at every login, so editing it does not need a restart.
+Luồng đăng nhập
+  1. tên đăng nhập = mã thẻ 8 ký tự, mật khẩu = mật khẩu mặc định dùng chung (DEFAULT_PASSWORD,
+     có thể đè bằng "default_password" trong file bộ phận)
+  2. mã thẻ -> SOAP IsAuthorizedMeasuredESDEmp_NEW -> "ID_Name_Dept_Status"
+  3. mã BỘ PHẬN (ví dụ MNM561, MNM571) được tra trong file bộ phận
+     (config/departments.json), cho ra cấp truy cập 1..5 (5 = cao nhất).
+     Bộ phận không có trong danh sách nhận "default_level" (0 = từ chối đăng nhập).
+File được đọc lại mỗi lần đăng nhập, nên sửa file không cần khởi động lại.
 
-Note: the password is shared by every employee, so it is NOT a secret; the real gate is that the card
-exists and that its department is listed with a level.
+Lưu ý: mật khẩu dùng chung cho mọi nhân viên nên KHÔNG phải bí mật; điều kiện thật sự là thẻ
+tồn tại và bộ phận của thẻ có trong danh sách với một cấp.
 """
 import fnmatch
 import hmac
@@ -27,7 +27,7 @@ CARD_RE = re.compile(r"^[A-Za-z0-9]{8}$")
 
 
 class EmployeeError(Exception):
-    """Login / lookup failure. `reason` is a short machine readable code."""
+    """Lỗi đăng nhập / tra cứu. `reason` là mã ngắn để chương trình đọc."""
 
     def __init__(self, reason, message):
         super().__init__(message)
@@ -47,9 +47,9 @@ class Employee:
 @dataclass
 class LoginResult:
     employee: Employee
-    job: str                       # "L<level> <department>"; stored as staff_bp in the dashboard table
+    job: str                       # "L<level> <department>"; lưu thành staff_bp trong bảng dashboard
     level: int                     # 1..5
-    allowed: FrozenSet[str] = field(default_factory=lambda: frozenset(ACTIONS))   # actions this level may do
+    allowed: FrozenSet[str] = field(default_factory=lambda: frozenset(ACTIONS))   # các thao tác cấp này được làm
 
 
 def build_soap(card_id, start, end):
@@ -68,7 +68,7 @@ def build_soap(card_id, start, end):
 
 
 def parse_response(xml_text, card):
-    """Response XML -> Employee. The result text is 'ID_Name_Dept_Status'."""
+    """XML phản hồi -> Employee. Văn bản kết quả là 'ID_Name_Dept_Status'."""
     try:
         root = ET.fromstring(xml_text)
     except ET.ParseError as ex:
@@ -82,19 +82,19 @@ def parse_response(xml_text, card):
     parts = raw.split("_")
     if len(parts) < 4:
         raise EmployeeError("CARD_NOT_FOUND", "kết quả ESD không hợp lệ %r" % raw)
-    # id is the first field, status and dept the last two; the name may itself contain '_'
+    # id là trường đầu, status và dept là hai trường cuối; bản thân tên có thể chứa '_'
     name = "_".join(parts[1:-2])
     emp = Employee(card=card, id=parts[0], name=name, dept=parts[-2], status=parts[-1])
-    if len(emp.name) < 4:          # same rule as the old program: a short name means "card not found"
+    if len(emp.name) < 4:          # cùng quy tắc với chương trình cũ: tên ngắn nghĩa là "không tìm thấy thẻ"
         raise EmployeeError("CARD_NOT_FOUND", "mã thẻ %s không tồn tại" % card)
     return emp
 
 
 def http_post_soap(url, body, timeout):
-    """Default transport: POST the SOAP envelope ignoring system proxies. Returns the response text."""
+    """Cách gửi mặc định: POST SOAP envelope, bỏ qua proxy của hệ thống. Trả về văn bản phản hồi."""
     import requests
     session = requests.Session()
-    session.trust_env = False            # internal network: never go through the proxy
+    session.trust_env = False            # mạng nội bộ: không bao giờ đi qua proxy
     try:
         resp = session.post(url, data=body.encode("utf-8"), timeout=timeout, headers={
             "Content-Type": "text/xml; charset=utf-8", "SOAPAction": '"%s"' % SOAP_ACTION})
@@ -106,13 +106,13 @@ def http_post_soap(url, body, timeout):
 
 DEFAULT_PASSWORD = "wnc000000"
 LEVELS = (1, 2, 3, 4, 5)
-# What an operator may do. Each action needs at least min_level[action] (departments file); default 1 = everybody.
+# Người vận hành được làm gì. Mỗi thao tác cần tối thiểu min_level[action] (file bộ phận); mặc định 1 = ai cũng được.
 ACTIONS = ("operate", "manual", "teach")
 DEFAULT_MIN_LEVEL = {"operate": 1, "manual": 1, "teach": 1}
 
 
 class AccessPolicy:
-    """Department code -> level, the shared password and the minimum level of each action."""
+    """Mã bộ phận -> cấp, mật khẩu chung và cấp tối thiểu của từng thao tác."""
 
     def __init__(self, departments=None, default_level=0, default_password=DEFAULT_PASSWORD, min_level=None):
         self.departments = {str(k).strip().upper(): int(v) for k, v in (departments or {}).items()}
@@ -133,7 +133,7 @@ class AccessPolicy:
         if not isinstance(data, dict) or not isinstance(data.get("departments", {}), dict):
             raise EmployeeError("ACCESS_FILE", "file bộ phận: cần một object có mục 'departments'")
         try:
-            def real(d):                                   # keys starting with "_" are comments
+            def real(d):                                   # khóa bắt đầu bằng "_" là chú thích
                 return {k: v for k, v in (d or {}).items() if not str(k).startswith("_")}
             return cls(real(data.get("departments")), data.get("default_level", 0),
                        data.get("default_password", DEFAULT_PASSWORD), real(data.get("min_level")))
@@ -143,7 +143,7 @@ class AccessPolicy:
     @classmethod
     def load(cls, path):
         try:
-            with open(path, "r", encoding="utf-8-sig") as fh:          # utf-8-sig: Notepad may add a BOM
+            with open(path, "r", encoding="utf-8-sig") as fh:          # utf-8-sig: Notepad có thể thêm BOM
                 data = json.load(fh)
         except FileNotFoundError:
             raise EmployeeError("ACCESS_FILE", "không tìm thấy file bộ phận: %s" % path)
@@ -152,7 +152,7 @@ class AccessPolicy:
         return cls.from_dict(data)
 
     def level_for(self, dept):
-        """Exact department code first (case-insensitive), then patterns such as 'MNM5*'; else default_level."""
+        """Mã bộ phận khớp chính xác trước (không phân biệt hoa thường), rồi tới mẫu như 'MNM5*'; nếu không thì default_level."""
         key = (dept or "").strip().upper()
         if key in self.departments:
             return self.departments[key]
@@ -184,7 +184,7 @@ class EmployeeService:
         self._transport = transport or http_post_soap
         self.policy_path = policy_path
         self._policy = policy
-        if offline_demo and policy is None:               # demo: no file needed, the demo user is level 5
+        if offline_demo and policy is None:               # demo: không cần file, người dùng demo có cấp 5
             self._policy = AccessPolicy({"DEMO": 5})
 
     @classmethod
@@ -197,7 +197,7 @@ class EmployeeService:
                    policy_path=path)
 
     def policy(self):
-        """The access policy (re-read from the file on every call, so edits apply to the next login)."""
+        """Chính sách truy cập (đọc lại từ file mỗi lần gọi, nên sửa file có hiệu lực từ lần đăng nhập sau)."""
         if self._policy is not None:
             return self._policy
         if not self.policy_path:
@@ -205,7 +205,7 @@ class EmployeeService:
         return AccessPolicy.load(self.policy_path)
 
     def lookup(self, card):
-        """Card id -> Employee (raises EmployeeError)."""
+        """Mã thẻ -> Employee (ném EmployeeError)."""
         card = check_card(card)
         if self.offline_demo:
             return Employee(card, card, "Demo User", "DEMO", "OK")
@@ -213,7 +213,7 @@ class EmployeeService:
         return parse_response(xml, card)
 
     def login(self, username, password):
-        """Card number + shared password -> LoginResult. Raises EmployeeError(reason, message)."""
+        """Mã thẻ + mật khẩu chung -> LoginResult. Ném EmployeeError(reason, message)."""
         card = check_card(username)
         policy = self.policy()
         if not policy.check_password(password or ""):

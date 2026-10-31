@@ -1,1 +1,1 @@
-"""Robot access: client of the 32-bit robot bridge."""
+"""Truy cập robot: client của bridge robot 32-bit."""

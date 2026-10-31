@@ -1,1 +1,1 @@
-"""Devices of the robot cell: the End Effector and the tools on it (heads, barcode scanner, laser)."""
+"""Thiết bị của cell robot: End Effector và các tool trên nó (tay hút, đầu đọc mã vạch, laser)."""

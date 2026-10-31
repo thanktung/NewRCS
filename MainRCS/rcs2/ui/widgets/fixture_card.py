@@ -1,5 +1,5 @@
 """Fixture card of the main window."""
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtWidgets
 from PySide6.QtCore import Qt, Signal
 
 from ...core import engine as E
@@ -11,9 +11,8 @@ from .texts import RESULT_TEXT, STATE_TEXT
 
 class FixtureCard(Surface):
     """Compact fixture card (about 190 x 130 px) so that many fixtures fit on one screen:
-    name + ATS badge + menu / state / serial number / test progress / counters / switch + last result."""
+    name + ATS badge / state / serial number / test progress / counters / switch + last result."""
     toggled = Signal(int, bool)
-    reset_requested = Signal(int, bool)
 
     def __init__(self, number, station):
         super().__init__()
@@ -31,22 +30,9 @@ class FixtureCard(Surface):
         name = QtWidgets.QLabel("Fixture %d" % number)
         name.setObjectName("fixName")
         self.ats = Pill("ATS", "grey", compact=True)
-        self.menu_btn = QtWidgets.QToolButton()
-        self.menu_btn.setIcon(F.glyph_icon("more", F.TEXT_2, 14))
-        self.menu_btn.setIconSize(QtCore.QSize(14, 14))
-        self.menu_btn.setFixedSize(22, 22)
-        if not F.icon_family():
-            self.menu_btn.setText("...")
-        self.menu_btn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.menu_btn.setToolTip("Đặt lại fixture")
-        menu = QtWidgets.QMenu(self)
-        menu.addAction("Đặt lại - fixture trống", lambda: self.reset_requested.emit(self.number, False))
-        menu.addAction("Đặt lại - DUT còn bên trong (lấy ra thùng NG)", lambda: self.reset_requested.emit(self.number, True))
-        self.menu_btn.setMenu(menu)
         top.addWidget(name)
         top.addWidget(self.ats)
         top.addStretch()
-        top.addWidget(self.menu_btn)
         root.addLayout(top)
 
         self.state = QtWidgets.QLabel(STATE_TEXT[E.OFFLINE])

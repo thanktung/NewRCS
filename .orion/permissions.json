@@ -12,7 +12,11 @@
     "bash_tool(Set-Location 'D:\\RCS TOTAL ALL\\travis\\RCS2'; & .\\venv\\Scripts\\python.exe _snip_splice.py; Remove-Item _snip_*.py; Set-Location MainRCS; $env:PYTHONUTF8='1'; & '..\\venv\\Scripts\\python.exe' *)",
     "bash_tool(Set-Location 'D:\\RCS TOTAL ALL\\travis\\RCS2\\MainRCS'; Copy-Item config\\settings.json config\\settings.json.pre_sim.bak *)",
     "bash_tool(Set-Location 'D:\\RCS TOTAL ALL\\travis\\RCS2\\MainRCS'; $env:PYTHONUTF8='1'; $p = Start-Process *)",
-    "bash_tool(Set-Location 'D:\\RCS TOTAL ALL\\travis\\RCS2\\MainRCS'; $env:PYTHONUTF8='1'; & '..\\venv\\Scripts\\python.exe' run_tests.py > ..\\_t.txt 2>&1; \"exit=$LASTEXITCODE\"; Get-Content ..\\_t.txt *)"
+    "bash_tool(Set-Location 'D:\\RCS TOTAL ALL\\travis\\RCS2\\MainRCS'; $env:PYTHONUTF8='1'; & '..\\venv\\Scripts\\python.exe' run_tests.py > ..\\_t.txt 2>&1; \"exit=$LASTEXITCODE\"; Get-Content ..\\_t.txt *)",
+    "bash_tool(Get-ChildItem *)",
+    "Bash(Set-Content -Path \"$env:TEMP\\rcs_zip.py\" -Value $script -Encoding UTF8)",
+    "Bash(.\\.venv314\\Scripts\\python.exe \"$env:TEMP\\rcs_zip.py\")",
+    "task_create"
   ],
   "deny": []
 }

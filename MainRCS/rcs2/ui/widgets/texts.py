@@ -2,8 +2,7 @@
 from ...core import engine as E
 
 
-STATE_TEXT = {E.NO_USED: "Không dùng", E.OFFLINE: "Mất kết nối", E.IDLE: "Sẵn sàng", E.WAIT_LOAD: "Chờ nạp",
+STATE_TEXT = {E.NO_USED: "Không dùng", E.OFFLINE: "Mất kết nối", E.IDLE: "Sẵn sàng",
               E.LOADING: "Đang nạp", E.TESTING: "Đang test", E.RESULT: "Kết quả", E.UNLOADING: "Đang lấy ra",
               E.FAULT: "Lỗi"}
 RESULT_TEXT = {"WARNING": "CẢNH BÁO"}
-JOB_TEXT = {"load": "nạp", "unload": "lấy ra"}

@@ -1,5 +1,5 @@
-"""Demo mode: a simulated robot bridge and mock ATS programs run inside this process,
-so the whole application can be tried without any hardware (python -m rcs2 --demo)."""
+"""Chế độ demo: bridge robot mô phỏng và các chương trình ATS giả chạy ngay trong tiến trình này,
+nên có thể thử toàn bộ ứng dụng mà không cần phần cứng (python -m rcs2 --demo)."""
 import copy
 import os
 import sys
@@ -7,49 +7,17 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))      # MainRCS/
 BRIDGE_DIR = os.path.join(ROOT, "bridge32")
 
-DEMO_POINTS = {
-    "above_input": [300, -200, 250, 180, 0, 0],
-    "above_pass": [-300, -200, 250, 180, 0, 0],
-    "above_ng": [-300, 200, 250, 180, 0, 0],
-    "above_fixture_1": [100, 300, 250, 180, 0, 0],
-    "above_fixture_2": [200, 300, 250, 180, 0, 0],
-    "above_fixture_3": [300, 300, 250, 180, 0, 0],
-    "above_fixture_4": [400, 300, 250, 180, 0, 0],
-}
-
-DEMO_SEQUENCES = {
-    "load": [
-        {"robot": "move", "pose": "above_input"},
-        {"robot": "get", "station": 0},
-        {"robot": "move", "pose": "above_fixture_{fixture}"},
-        {"robot": "put", "station": "{robot_station}"},
-    ],
-    "unload_pass": [
-        {"robot": "move", "pose": "above_fixture_{fixture}"},
-        {"robot": "get", "station": "{robot_station}"},
-        {"robot": "move", "pose": "above_pass"},
-        {"robot": "put", "station": 8},
-    ],
-    "unload_ng": [
-        {"robot": "move", "pose": "above_fixture_{fixture}"},
-        {"robot": "get", "station": "{robot_station}"},
-        {"robot": "move", "pose": "above_ng"},
-        {"robot": "put", "station": 9},
-    ],
-}
-
-
 def sample_flow_points(settings):
-    """SAMPLE taught points for the tray flow (settings.json -> flow.mode = tray), sized from the settings: one head_k_at_O per head of
-    end_effector.heads.units, scanner_at_O, laser_at_O, the three points of every tray (input, NG, output) and fixture_N for every fixture. They only make the simulation
-    run - they are NOT real coordinates (a real cell must teach them: Manual -> Hiệu chuẩn luồng tray)."""
+    """Các điểm dạy MẪU cho luồng tray, tính theo cài đặt: mỗi tay trong end_effector.heads.units một điểm
+    head_k_at_O, scanner_at_O, laser_at_O, ba điểm của mỗi tray (input, NG, output) và fixture_N cho mỗi fixture. Chúng chỉ để mô phỏng
+    chạy được - KHÔNG phải tọa độ thật (cell thật phải dạy: Thủ công -> Hiệu chuẩn luồng tray)."""
     config = [0, 0, 1, 1, 0, 0, 0]
 
     def pt(x, y, z):
         return {"xyzwpr": [float(x), float(y), float(z), 180.0, 0.0, 0.0], "config": list(config), "uf": 1, "ut": 1}
     ee = settings.get("end_effector") or {}
     heads = len((ee.get("heads") or {}).get("units") or [])
-    points = {"head_%d_at_O" % k: pt(500 - 22 * (k - 1), 100, 300) for k in range(1, heads + 1)}      # heads 22 mm apart
+    points = {"head_%d_at_O" % k: pt(500 - 22 * (k - 1), 100, 300) for k in range(1, heads + 1)}      # các tay cách nhau 22 mm
     if ee.get("scanner"):
         points["scanner_at_O"] = pt(545, 100, 300)
     if (settings.get("flow") or {}).get("laser_check", {}).get("enabled") and ee.get("laser"):
@@ -68,9 +36,9 @@ def sample_flow_points(settings):
 
 
 def start_demo(settings, fixtures=4, speed=0.15, test_time=(3.0, 0.8)):
-    """Start the simulated bridge + one mock ATS per fixture. Returns (settings, stop_function).
+    """Chạy bridge mô phỏng + mỗi fixture một ATS giả. Trả về (settings, stop_function).
 
-    `speed` scales the simulated robot motion time; `test_time` = (base, step) seconds of the mock tests.
+    `speed` co giãn thời gian chuyển động của robot mô phỏng; `test_time` = (base, step) giây của các lần test giả.
     """
     if BRIDGE_DIR not in sys.path:
         sys.path.insert(0, BRIDGE_DIR)
@@ -85,7 +53,7 @@ def start_demo(settings, fixtures=4, speed=0.15, test_time=(3.0, 0.8)):
                  "sim_delay_s": max(0.02, speed * 3)})
     bcfg.update({"sim_fixtures": {}, "sim_scanner": {"port": 0, "read_s": 0.05, "no_read_rate": 0.0, "prefix": "SIM"}})
     app = BS.Bridge(bcfg, sim=True)
-    cell = BS.Cell(app, bcfg, "127.0.0.1").start()                  # the barcode scanner of the End Effector (the ATS are mock ATS below)
+    cell = BS.Cell(app, bcfg, "127.0.0.1").start()                  # đầu đọc mã của End Effector (các ATS là ATS giả bên dưới)
     server = BS.Server(("127.0.0.1", 0), BS.Handler)
     server.bridge = app
     threading.Thread(target=server.serve_forever, daemon=True).start()

@@ -92,8 +92,7 @@
   },
 
   "flow": {
-    "_note": "CHẾ ĐỘ CHẠY CHÍNH: tray = robot phục vụ TẤT CẢ box bằng TẤT CẢ tay hút. Lấy hàng chưa test từ tray Input (tọa độ ô tính từ 3 điểm O, X, Y, đủ 6 giá trị), đổi hàng ở box test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. SỐ TAY HÚT = số phần tử của end_effector.heads.units (tối thiểu 2): thêm / bớt một phần tử, dạy điểm head_k_at_O tương ứng rồi khởi động lại. Đổi mode về classic để quay lại chế độ cũ (sequence load / unload_*). Các điểm phải dạy: head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray).",
-    "mode": "tray",
+    "_note": "Robot phục vụ TẤT CẢ box bằng TẤT CẢ tay hút. Lấy hàng chưa test từ tray Input (tọa độ ô tính từ 3 điểm O, X, Y, đủ 6 giá trị), đổi hàng ở box test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. SỐ TAY HÚT = số phần tử của end_effector.heads.units (tối thiểu 2): thêm / bớt một phần tử, dạy điểm head_k_at_O tương ứng rồi khởi động lại. Các điểm phải dạy: head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray).",
     "max_attempts": 3,
     "keep_free_heads": 1,
     "max_pick": 8, "max_sort": 8, "pick_ahead": 0, "top_up_when_idle": true, "fill_heads": true,
@@ -111,7 +110,6 @@
   "consecutive_ng": {"limit": 3, "stop_fixture": true},
 
   "engine": {
-    "reload_after_unload": true,
     "auto_start_test": true,
     "send_dut_out": false,
     "test_timeout_s": 300,

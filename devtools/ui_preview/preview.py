@@ -37,7 +37,7 @@ class FakeEngine:
         return self.snap
 
     def __getattr__(self, name):
-        if name in ("start_run", "pause_run", "stop_run", "acknowledge_fault", "set_enabled", "reset_fixture", "reset_flow"):
+        if name in ("start_run", "pause_run", "stop_run", "acknowledge_fault", "set_enabled", "reset_flow"):
             return lambda *a: self.calls.append((name, a))
         raise AttributeError(name)
 
@@ -170,7 +170,7 @@ def snap_running():
         "run_state": E.RUNNING, "fault_text": "",
         "fixtures": [
             fx(1, E.IDLE, total=12, passed=10, ng=2, yield_pct=83.3, last_result="PASS", last_test_time=38.2),
-            fx(2, E.WAIT_LOAD, total=9, passed=9, ng=0, yield_pct=100.0),
+            fx(2, E.IDLE, total=9, passed=9, ng=0, yield_pct=100.0),
             fx(3, E.TESTING, total=5, passed=4, ng=1, yield_pct=80.0, sn="SN2610270013", elapsed=96.0),
             fx(4, E.RESULT, total=7, passed=5, ng=2, yield_pct=71.4, last_result="NG", last_detail="TEST_ITEM=12.3",
                last_test_time=41.7, consec_ng=2),
@@ -179,7 +179,7 @@ def snap_running():
             fx(7, E.UNLOADING, total=1, passed=1, yield_pct=100.0),
             fx(8, E.OFFLINE, enabled=True, connected=False),
         ],
-        "queue": [("load", 2)], "current_job": ("unload", 7),
+        "current_job": ("flow", 7),
         "robot": dict(ROBOT_OK), "robot_link": True, "program_running": True, "alarms": [],
         "sink": {"enabled": True, "pending": 0},
         "totals": {"total": 37, "passed": 31, "yield_pct": 83.8},
@@ -193,7 +193,6 @@ def snap_fault():
     s["run_state"] = E.RUN_FAULT
     s["fault_text"] = "fixture 4 lấy ra: SequenceError"
     s["current_job"] = None
-    s["queue"] = []
     s["fixtures"][3] = fx(4, E.FAULT, message="RobotError: ROBOT_ERROR: robot reported R[1]=-1 during put",
                           total=7, passed=5, ng=2, yield_pct=71.4)
     s["fixtures"][7] = fx(8, E.IDLE, connected=False, enabled=True)
@@ -217,7 +216,6 @@ def snap_offline():
     s = snap_running()
     s["run_state"] = E.STOPPED
     s["current_job"] = None
-    s["queue"] = []
     s["robot_link"] = False
     s["robot"] = {}
     s["sink"] = {"enabled": False, "pending": 12}
@@ -230,7 +228,7 @@ def snap_offline():
 def snap_many(n=16):
     """n fixtures in assorted states (density check)."""
     s = snap_running()
-    states = [E.IDLE, E.TESTING, E.WAIT_LOAD, E.RESULT, E.TESTING, E.NO_USED, E.UNLOADING, E.OFFLINE, E.FAULT, E.TESTING]
+    states = [E.IDLE, E.TESTING, E.LOADING, E.RESULT, E.TESTING, E.NO_USED, E.UNLOADING, E.OFFLINE, E.FAULT, E.TESTING]
     fixtures = []
     for i in range(1, n + 1):
         st = states[(i - 1) % len(states)]
@@ -367,7 +365,7 @@ def main():
     for lvl, t in [("info", "NewRCS sẵn sàng. Cần đăng nhập để vận hành."), ("info", "đã kết nối bridge robot (sim)"),
                    ("info", "fixture 3 đã bật"), ("info", "đã bắt đầu chạy"),
                    ("info", "fixture 3: đã đọc mã SN2610270013 (máy quét tay1)"),
-                   ("info", "việc robot 5: unload_ng fixture 4 (NG)"), ("info", "fixture 4: NG trong 41.7s TEST_ITEM=12.3"),
+                   ("info", "việc robot 5 (swap): box 4 test xong"), ("info", "fixture 4: NG trong 41.7s TEST_ITEM=12.3"),
                    ("warn", "bridge bị disarm: tạm dừng chạy"),
                    ("error", "việc robot thất bại - dừng chạy: fixture 2 nạp: ScanError: máy quét tay1: không đọc được mã"),
                    ("debug", "load step 1: {'scan': 'tay1'}")]:

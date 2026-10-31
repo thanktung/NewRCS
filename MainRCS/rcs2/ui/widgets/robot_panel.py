@@ -5,7 +5,6 @@ from PySide6.QtCore import Signal
 from ...core import engine as E
 from ..kit import fluent as F
 from ..kit.fluent import Panel, Pill
-from .texts import JOB_TEXT
 
 
 class RobotPanel(Panel):
@@ -95,8 +94,7 @@ class RobotPanel(Panel):
         pos = st.get("curpos")
         self._v["pos"].setText("-" if not pos else "%.0f   %.0f   %.0f" % tuple(pos[:3]))
         job = snap["current_job"]
-        self._v["job"].setText("-" if not job else "%s F%d (+%d chờ)" % (JOB_TEXT.get(job[0], job[0]), job[1],
-                                                                       len(snap["queue"])))
+        self._v["job"].setText("-" if not job else "%s F%d" % (job[0], job[1]))
         self.msg.setText(st.get("message", ""))
         self.btn_connect.setEnabled(link and not rc)
         idle = link and rc and snap["run_state"] != E.RUNNING and not job

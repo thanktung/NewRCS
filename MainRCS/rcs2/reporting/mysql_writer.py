@@ -1,4 +1,4 @@
-"""Writes outbox items into the legacy MySQL tables (pymysql, parameterised statements)."""
+"""Ghi các mục của outbox vào bảng MySQL cũ (pymysql, câu lệnh có tham số)."""
 import logging
 
 from .sql_targets import SqlTargets
@@ -7,9 +7,9 @@ log = logging.getLogger("rcs2.mysql")
 
 
 class MySqlWriter:
-    """write_batch(items) -> number of items written (in order); raises if the DB is unreachable.
+    """write_batch(items) -> số mục đã ghi (theo thứ tự); ném lỗi nếu không kết nối được DB.
 
-    `connect_fn` is injectable so tests can use a fake DB-API connection.
+    `connect_fn` có thể thay thế để test dùng kết nối DB-API giả.
     """
 
     def __init__(self, targets: SqlTargets, host="", port=3306, user="", password="", database="",
@@ -26,7 +26,7 @@ class MySqlWriter:
         return pymysql.connect(**self._params)
 
     def write_batch(self, items):
-        """items: [(id, kind, payload)]. Stops at the first failing item; returns how many succeeded."""
+        """items: [(id, kind, payload)]. Dừng ở mục lỗi đầu tiên; trả về số mục đã ghi thành công."""
         if not items:
             return 0
         conn = self._connect()

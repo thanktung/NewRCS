@@ -23,7 +23,7 @@ gửi lệnh và nhận kết quả. Module này chỉ lo khung tin và đườn
 ### Thêm một loại tin mới từ ATS
 1. `protocol.py`: thêm hằng loại sự kiện (ví dụ `NEW = "NEW"`), thêm dòng vào `_RULES` **đúng vị trí** (tên dài / cụ thể đặt trước),
    thêm cách bóc trường trong `parse_message` nếu có tham số, nếu là kết quả thì thêm vào `AtsEvent.is_result`.
-2. `core/engine.py`: xử lý trong `_on_ats` (và `RESULT_LABEL` / `UNLOAD_SEQUENCE` nếu là kết quả).
+2. `core/engine.py`: xử lý trong `_on_ats` (và `RESULT_LABEL` / `COUNTS_AS_FAIL` nếu là kết quả).
 3. Cho simulator biết tin mới: `ats/mock_ats.py` (`_handle`, `_run_test`) **và** `bridge32/bridge_simple.py` (`SimFixture`).
 4. Test: `tests/ats/test_ats.py` (phân tích tin) + `tests/core/test_engine.py` (cách engine phản ứng).
 

@@ -1,5 +1,5 @@
-"""Local SQLite outbox: every record is stored here first, so nothing is lost while MySQL is down
-or the program crashes. Also stores small key/value metadata and the currently open errors."""
+"""Outbox SQLite cục bộ: mọi bản ghi được lưu ở đây trước, nên không mất gì khi MySQL ngừng
+hoặc chương trình crash. Cũng lưu vài metadata dạng key/value và các lỗi đang mở."""
 import json
 import os
 import sqlite3
@@ -27,7 +27,7 @@ class Outbox:
         with self._lock:
             self._db.close()
 
-    # ---- queue ---------------------------------------------------------- #
+    # ---- hàng đợi ------------------------------------------------------- #
     def enqueue(self, kind, payload):
         with self._lock, self._db:
             cur = self._db.execute("INSERT INTO outbox(kind, payload, created) VALUES (?,?,?)",
@@ -66,7 +66,7 @@ class Outbox:
             row = self._db.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
         return row[0] if row else default
 
-    # ---- open errors (errors that started but have not ended yet) -------- #
+    # ---- lỗi đang mở (lỗi đã bắt đầu nhưng chưa kết thúc) ---------------- #
     def save_open_error(self, key, error_code, error, station, start_iso):
         with self._lock, self._db:
             self._db.execute("INSERT OR REPLACE INTO open_errors(key,error_code,error,station,start) "

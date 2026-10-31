@@ -1,5 +1,4 @@
 """Manual control: jog (rmove), go to point, teach point, guards, and the new bridge limits."""
-import copy
 import json
 import os
 import shutil
@@ -8,8 +7,8 @@ import time
 import unittest
 
 from tests.support import bridge as helpers
-from rcs2.config import DEFAULTS
-from rcs2.tools.demo import DEMO_POINTS, DEMO_SEQUENCES, start_demo
+from rcs2.tools.demo import sample_flow_points, start_demo
+from tests.support.engine import tray_settings
 from rcs2.robot import protocol as P
 from rcs2.robot.client import BridgeClient, RobotError
 from rcs2.runtime import Runtime
@@ -58,11 +57,12 @@ class RuntimeManualTests(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         os.makedirs(os.path.join(self.tmp, "config"))
         self.seq_file = os.path.join(self.tmp, "config", "sequences.json")
-        with open(self.seq_file, "w", encoding="utf-8") as fh:
-            json.dump({"points": DEMO_POINTS, "sequences": DEMO_SEQUENCES}, fh)
-        base = copy.deepcopy(DEFAULTS)
+        base = tray_settings()
         base["outbox_path"] = os.path.join(self.tmp, "outbox.sqlite")
         self.cfg, self.stop_demo = start_demo(base, fixtures=1, speed=0.02, test_time=(0.2, 0.1))
+        self.points = sample_flow_points(self.cfg)
+        with open(self.seq_file, "w", encoding="utf-8") as fh:
+            json.dump({"_note": "keep me", "points": self.points}, fh)
         self.rt = Runtime(self.cfg, self.tmp)            # loads config/sequences.json -> teach is possible
         self.rt.start()
         wait_until(lambda: self.rt.engine.snapshot()["robot"].get("connected"), what="robot link")
@@ -96,8 +96,8 @@ class RuntimeManualTests(unittest.TestCase):
         wait_until(lambda: self.rt.bridge.last_status.get("armed") is False)
 
     def test_move_to_point_uses_taught_config(self):
-        self.rt.manual_move_to("above_pass", override=20)
-        self.assertEqual(self.rt.bridge.pos_read()["xyzwpr"][:3], DEMO_POINTS["above_pass"][:3])
+        self.rt.manual_move_to("input_O", override=20)
+        self.assertEqual(self.rt.bridge.pos_read()["xyzwpr"][:3], self.points["input_O"]["xyzwpr"][:3])
         with self.assertRaises(KeyError):
             self.rt.manual_move_to("nope")
 
@@ -108,7 +108,7 @@ class RuntimeManualTests(unittest.TestCase):
         with open(self.seq_file, encoding="utf-8") as fh:
             saved = json.load(fh)
         self.assertEqual(saved["points"]["my_point"], point)
-        self.assertIn("load", saved["sequences"])                       # rest of the file preserved
+        self.assertEqual(saved["_note"], "keep me")                      # rest of the file preserved
         self.assertTrue(os.path.exists(self.seq_file + ".bak"))
         self.assertIn("my_point", self.rt.engine.points)                # engine sees it without restart
         self.rt.manual_move_to("my_point", override=20)                 # and it can be used straight away
@@ -119,7 +119,7 @@ class RuntimeManualTests(unittest.TestCase):
                 self.rt.teach_point(bad)
 
     def test_teach_not_possible_in_demo_mode(self):
-        rt = Runtime(self.cfg, self.tmp, {"points": dict(DEMO_POINTS), "sequences": DEMO_SEQUENCES})
+        rt = Runtime(self.cfg, self.tmp, {"points": dict(self.points)})
         try:
             with self.assertRaises(RuntimeError):
                 rt.teach_point("x")

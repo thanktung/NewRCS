@@ -1,7 +1,7 @@
-"""TCP client of one fixture's ATS program (RCS is the client, the ATS listens).
+"""TCP client tới chương trình ATS của một fixture (RCS là client, ATS lắng nghe).
 
-Runs a supervisor thread that connects, sends the heartbeat, decodes frames and reconnects
-forever. Callbacks run on the client's own threads: keep them short (e.g. emit a Qt signal).
+Chạy một thread giám sát: kết nối, gửi heartbeat, giải mã khung và kết nối lại
+mãi mãi. Callback chạy trên thread của chính client: giữ chúng thật ngắn (ví dụ phát một Qt signal).
 """
 import logging
 import socket
@@ -46,7 +46,7 @@ class AtsClient:
         self._thread = None
 
     def send(self, text):
-        """Send one frame. Returns False (and drops it) when the ATS is not connected."""
+        """Gửi một khung. Trả về False (và bỏ khung đó) khi ATS chưa kết nối."""
         sock = self._sock
         if sock is None or not self.connected:
             return False
@@ -137,7 +137,7 @@ class AtsClient:
                         log.exception("on_event failed")
 
     # ------------------------------------------------------------------ #
-    # RCS -> ATS helpers
+    # các hàm tiện ích RCS -> ATS
     # ------------------------------------------------------------------ #
     def place_dut_ok(self):
         return self.send(P.place_dut_ok())
