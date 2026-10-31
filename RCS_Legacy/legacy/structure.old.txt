@@ -1,0 +1,13 @@
+project/
+├── ui_app/                      # Chạy Python 64-bit
+│   ├── main.py
+│   ├── ui/
+│   │   └── main_window.py
+│   └── robot_client.py          # gọi tới bridge qua socket, KHÔNG có win32com
+│
+├── robot_bridge/                 # Chạy Python 32-bit, build thành .exe riêng
+│   ├── bridge_server.py          # socket server, nhận lệnh, gọi COM
+│   └── frrjif_wrapper.py         # wrap FRRJIf.Core (file makepy bạn có)
+│
+└── shared/
+    └── protocol.py                # định nghĩa message format dùng chung 2 bên

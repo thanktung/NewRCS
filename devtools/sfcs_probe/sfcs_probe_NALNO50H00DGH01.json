@@ -1,0 +1,680 @@
+{
+ "ATS_Query_All_CSN(NALNO50H00DGH01)": {
+  "ATS_Query_All_CSNResult": "B43F58LCF56R",
+  "ErrMsg": null
+ },
+ "ATS_Query_CSN(NALNO50H00DGH01)": {
+  "ATS_Query_CSNResult": "B43F58LCF56R",
+  "ErrMsg": null
+ },
+ "getFLEXFIELD_ByCSN(NALNO50H00DGH01)": {
+  "getFLEXFIELD_ByCSNResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "getFLEXFIELD_BySSN(NALNO50H00DGH01)": {
+  "getFLEXFIELD_BySSNResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "getSPC_FLEXFIELD(NALNO50H00DGH01)": {
+  "getSPC_FLEXFIELDResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "FA",
+       "VALUE": "02",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "FW_VERSION",
+       "VALUE": "08.50.00",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "AIM",
+       "VALUE": "0455",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "PCBAASSEMBLY",
+       "VALUE": "SX-6100-0561-05-08.07",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "ENGINFO",
+       "VALUE": "X28BF BOM C",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "CONFIGID",
+       "VALUE": "F48SXSXW1085000ND1P02XX",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "CN",
+       "VALUE": "SX-7800-0476",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "NVM_DATA",
+       "VALUE": "V1_20260715_F48SXSXW1085000ND1P02XX_SX-6100-0561-05-08.07_SX-7800-0476_-98.50/00_-90.25/00_-101.00/00_-93.00/00_10000.0000_42.0_42.0_X28BF BOM C                                                                                                                ",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getAllCsnByCsn(NALNO50H00DGH01)": {
+  "getAllCsnByCsnResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "NALNO50H00DGH01",
+       "CPN": "NALN",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "B43F58LCF56R",
+       "CPN": "@H_SID_1212",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "B43F58LCF56R3218",
+       "CPN": "@H_SID_16",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getAllCsn(NALNO50H00DGH01)": {
+  "getAllCsnResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "@H_SID_1212",
+       "CSN": "B43F58LCF56R",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00"
+      }
+     },
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "@H_SID_16",
+       "CSN": "B43F58LCF56R3218",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00"
+      }
+     },
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "NALN",
+       "CSN": "NALNO50H00DGH01",
+       "CREATED_DATE": "2026-07-15 11:21:15+07:00"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getSN_ByCSN(NALNO50H00DGH01)": {
+  "getSN_ByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CSN": "B43F58LCF56R"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getProdSSN_ByCSN(NALNO50H00DGH01)": {
+  "getProdSSN_ByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CSN": "NALNO50H00DGH01",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getModelNamebyCSN(NALNO50H00DGH01)": {
+  "getModelNamebyCSNResult": null,
+  "errMsg": null
+ },
+ "getCreatedTime_byCsn(NALNO50H00DGH01)": {
+  "getCreatedTime_byCsnResult": "2024-12-16 15:34:49.111",
+  "errMsg": null
+ },
+ "getMODownLoadTimeByCSN(NALNO50H00DGH01)": {
+  "getMODownLoadTimeByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CREATED_DATE": "2026-07-13 18:32:03+07:00",
+       "MO": "NN1AEL070095"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getMOLineByMACSN(NALNO50H00DGH01)": {
+  "getMOLineByMACSNResult": "NN1AEL070095|E836V2",
+  "errMsg": null
+ },
+ "getPNGNDSbyCSN(NALNO50H00DGH01)": {
+  "getPNGNDSbyCSNResult": null,
+  "errMsg": null
+ },
+ "get_45PN_By_CSN(NALNO50H00DGH01)": {
+  "get_45PN_By_CSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "PN": "45.LC101.002JM5AG"
+      }
+     },
+     {
+      "Table": {
+       "PN": "4L-JS7B107-006RX5AG"
+      }
+     },
+     {
+      "Table": {
+       "PN": "4L-UMSFLA6-001JM5AG"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "GetPsn(NALNO50H00DGH01)": "OK,U5XXQ29000ACH01",
+ "GetPN_BySN(NALNO50H00DGH01)": {
+  "GetPN_BySNResult": "91.UMCF8.G0KVNAAG",
+  "ErrMsg": null
+ },
+ "GetWO_BySN(NALNO50H00DGH01)": {
+  "GetWO_BySNResult": "NN1AEL070095",
+  "ErrMsg": null
+ },
+ "Get_SsnLastReason(NALNO50H00DGH01)": null,
+ "getEquipPass(NALNO50H00DGH01)": {
+  "getEquipPassResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "get_ProdData(NALNO50H00DGH01)": {
+  "get_ProdDataResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table1": {
+       "PN": "91.UMCF8.G0KVNAAG",
+       "PSN": "U5XXQ29000ACH01",
+       "MODEL": "UMS-X28BF",
+       "MO": "NN1AEL070095",
+       "MO_DATE": "2026071511:21:59",
+       "PSN_DATE": "2026071511:21:59",
+       "RETEST": "N",
+       "SHIPPING": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getSN_ForATS(NALNO50H00DGH01)": {
+  "getSN_ForATSResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CURR_STAGE": "NPACK",
+       "NEXT_STAGE": null,
+       "STATE": "C",
+       "IS_REWORK": "N",
+       "TRN_SEQ": "8",
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SCRAP_REASON": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "ATS_Query_All_CSN(B43F58LCF56R)": {
+  "ATS_Query_All_CSNResult": "B43F58LCF56R",
+  "ErrMsg": null
+ },
+ "ATS_Query_CSN(B43F58LCF56R)": {
+  "ATS_Query_CSNResult": "B43F58LCF56R",
+  "ErrMsg": null
+ },
+ "getFLEXFIELD_ByCSN(B43F58LCF56R)": {
+  "getFLEXFIELD_ByCSNResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "getFLEXFIELD_BySSN(B43F58LCF56R)": {
+  "getFLEXFIELD_BySSNResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "getSPC_FLEXFIELD(B43F58LCF56R)": {
+  "getSPC_FLEXFIELDResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "FA",
+       "VALUE": "02",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "FW_VERSION",
+       "VALUE": "08.50.00",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "AIM",
+       "VALUE": "0455",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "PCBAASSEMBLY",
+       "VALUE": "SX-6100-0561-05-08.07",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "ENGINFO",
+       "VALUE": "X28BF BOM C",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "CONFIGID",
+       "VALUE": "F48SXSXW1085000ND1P02XX",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "CN",
+       "VALUE": "SX-7800-0476",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "QUALIFIER": "NVM_DATA",
+       "VALUE": "V1_20260715_F48SXSXW1085000ND1P02XX_SX-6100-0561-05-08.07_SX-7800-0476_-98.50/00_-90.25/00_-101.00/00_-93.00/00_10000.0000_42.0_42.0_X28BF BOM C                                                                                                                ",
+       "CREATED_BY": "24701101",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00",
+       "UPDATED_BY": "24701101",
+       "UPDATED_DATE": "2026-07-15 16:40:17+07:00",
+       "DC_FLAG": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getAllCsnByCsn(B43F58LCF56R)": {
+  "getAllCsnByCsnResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "NALNO50H00DGH01",
+       "CPN": "NALN",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "B43F58LCF56R",
+       "CPN": "@H_SID_1212",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     },
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CSN": "B43F58LCF56R3218",
+       "CPN": "@H_SID_16",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getAllCsn(B43F58LCF56R)": {
+  "getAllCsnResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "@H_SID_1212",
+       "CSN": "B43F58LCF56R",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00"
+      }
+     },
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "@H_SID_16",
+       "CSN": "B43F58LCF56R3218",
+       "CREATED_DATE": "2026-07-15 11:21:59+07:00"
+      }
+     },
+     {
+      "Table": {
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SSN": "U5XX00P0004S",
+       "CPN": "NALN",
+       "CSN": "NALNO50H00DGH01",
+       "CREATED_DATE": "2026-07-15 11:21:15+07:00"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getSN_ByCSN(B43F58LCF56R)": {
+  "getSN_ByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CSN": "B43F58LCF56R"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getProdSSN_ByCSN(B43F58LCF56R)": {
+  "getProdSSN_ByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CSN": "B43F58LCF56R",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     },
+     {
+      "Table": {
+       "CSN": "B43F58LCF56R3218",
+       "PROD_SSN": "U5XXQ29000ACH01"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getModelNamebyCSN(B43F58LCF56R)": {
+  "getModelNamebyCSNResult": null,
+  "errMsg": null
+ },
+ "getCreatedTime_byCsn(B43F58LCF56R)": {
+  "getCreatedTime_byCsnResult": "2024-12-16 15:35:31.111",
+  "errMsg": null
+ },
+ "getMODownLoadTimeByCSN(B43F58LCF56R)": {
+  "getMODownLoadTimeByCSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "CREATED_DATE": "2026-07-13 18:32:03+07:00",
+       "MO": "NN1AEL070095"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getMOLineByMACSN(B43F58LCF56R)": {
+  "getMOLineByMACSNResult": "NN1AEL070095|E836V2",
+  "errMsg": null
+ },
+ "getPNGNDSbyCSN(B43F58LCF56R)": {
+  "getPNGNDSbyCSNResult": null,
+  "errMsg": null
+ },
+ "get_45PN_By_CSN(B43F58LCF56R)": {
+  "get_45PN_By_CSNResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "PN": "45.LC101.002JM5AG"
+      }
+     },
+     {
+      "Table": {
+       "PN": "4L-JS7B107-006RX5AG"
+      }
+     },
+     {
+      "Table": {
+       "PN": "4L-UMSFLA6-001JM5AG"
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "GetPsn(B43F58LCF56R)": "OK,U5XXQ29000ACH01",
+ "GetPN_BySN(B43F58LCF56R)": {
+  "GetPN_BySNResult": "91.UMCF8.G0KVNAAG",
+  "ErrMsg": null
+ },
+ "GetWO_BySN(B43F58LCF56R)": {
+  "GetWO_BySNResult": "NN1AEL070095",
+  "ErrMsg": null
+ },
+ "Get_SsnLastReason(B43F58LCF56R)": null,
+ "getEquipPass(B43F58LCF56R)": {
+  "getEquipPassResult": {
+   "_value_1": "<diffgr:diffgram xmlns:msdata=\"urn:schemas-microsoft-com:xml-msdata\" xmlns:diffgr=\"urn:schemas-microsoft-com:xml-diffgram-v1\" xmlns=\"http://tempuri.org/\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"/>"
+  },
+  "errMsg": null
+ },
+ "get_ProdData(B43F58LCF56R)": {
+  "get_ProdDataResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table1": {
+       "PN": "91.UMCF8.G0KVNAAG",
+       "PSN": "U5XXQ29000ACH01",
+       "MODEL": "UMS-X28BF",
+       "MO": "NN1AEL070095",
+       "MO_DATE": "2026071511:21:59",
+       "PSN_DATE": "2026071511:21:59",
+       "RETEST": "N",
+       "SHIPPING": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ },
+ "getSN_ForATS(B43F58LCF56R)": {
+  "getSN_ForATSResult": {
+   "_value_1": {
+    "_value_1": [
+     {
+      "Table": {
+       "SSN": "U5XX00P0004S",
+       "CURR_STAGE": "NPACK",
+       "NEXT_STAGE": null,
+       "STATE": "C",
+       "IS_REWORK": "N",
+       "TRN_SEQ": "8",
+       "PROD_SSN": "U5XXQ29000ACH01",
+       "SCRAP_REASON": null
+      }
+     }
+    ]
+   }
+  },
+  "errMsg": null
+ }
+}

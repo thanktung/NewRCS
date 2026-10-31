@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+logs/
+station_last_state.json
+*.tmp
+.idea/
+.orion/

@@ -1,0 +1,35 @@
+{
+  "example": true,
+  "_note": "PLACEHOLDER coordinates. Teach the real points, then delete the line  \"example\": true  (RCS2 refuses to Start on a real robot while it is there). Names in {braces} are filled in per job.",
+
+  "points": {
+    "above_input":     [300, -200, 250, 180, 0, 0],
+    "above_pass":      [-300, -200, 250, 180, 0, 0],
+    "above_ng":        [-300, 200, 250, 180, 0, 0],
+    "above_fixture_1": [100, 300, 250, 180, 0, 0],
+    "above_fixture_2": [200, 300, 250, 180, 0, 0],
+    "above_fixture_3": [300, 300, 250, 180, 0, 0],
+    "above_fixture_4": [400, 300, 250, 180, 0, 0]
+  },
+
+  "sequences": {
+    "load": [
+      {"robot": "move", "pose": "above_input"},
+      {"robot": "get",  "station": 0},
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "put",  "station": "{robot_station}"}
+    ],
+    "unload_pass": [
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "get",  "station": "{robot_station}"},
+      {"robot": "move", "pose": "above_pass"},
+      {"robot": "put",  "station": 8}
+    ],
+    "unload_ng": [
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "get",  "station": "{robot_station}"},
+      {"robot": "move", "pose": "above_ng"},
+      {"robot": "put",  "station": 9}
+    ]
+  }
+}

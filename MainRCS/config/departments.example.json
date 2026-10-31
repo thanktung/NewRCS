@@ -1,0 +1,17 @@
+{
+  "_note": "Mã bộ phận -> cấp truy cập 1..5 (5 là cao nhất). Sửa file này; file được đọc lại ở mỗi lần đăng nhập. Mã có thể là chính xác (MNM561) hoặc mẫu (MNM5*). Bộ phận không có trong danh sách sẽ nhận default_level (0 = từ chối đăng nhập).",
+
+  "default_level": 0,
+
+  "departments": {
+    "MNM561": 5,
+    "MNM571": 3
+  },
+
+  "min_level": {
+    "_note": "Cấp thấp nhất được phép: operate = Bắt đầu/Tạm dừng/Dừng, công tắc fixture, đặt lại, kết nối robot; manual = mở cửa sổ Thủ công và jog; teach = lưu điểm đã dạy.",
+    "operate": 1,
+    "manual": 1,
+    "teach": 1
+  }
+}

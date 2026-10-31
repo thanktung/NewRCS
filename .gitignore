@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+bridge32/logs/
+bridge32/bridge_config.json
+logs/
+data/outbox.sqlite
+*.sqlite
+.idea/
+.vs/
+
+_backup/

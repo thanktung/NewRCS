@@ -1,0 +1,78 @@
+{
+  "example": true,
+  "_note": "PLACEHOLDER coordinates. Teach the real points, then delete the line  \"example\": true  (NewRCS refuses to Start on a real robot while it is there). Names in {braces} are filled in per job.",
+  "points": {
+    "above_input": {"xyzwpr": [1156.51, -266.062, 507.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_fixture_1": {"xyzwpr": [1156.51, -266.062, 492.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_fixture_2": {"xyzwpr": [679.025, 25.199, 788.931, 88.284, -15.223, 140.437], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 0, "ut": 1},
+    "above_fixture_3": {"xyzwpr": [1206.51, -266.062, 507.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_any": {"xyzwpr": [1306.51, -266.062, 507.552, 90.08, 0.037, 75.179], "config": [1, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "point_1": {"xyzwpr": [426.01, 511.827, 201.95, 175.763, -3.42, 7.211], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "point_2": {"xyzwpr": [826.011, 561.826, 201.95, 175.763, -3.42, 7.211], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "point_3": {"xyzwpr": [876.011, -238.176, 201.949, 175.763, -3.42, 7.211], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "point_4": {"xyzwpr": [876.01, -688.177, 1.949, 175.763, -3.42, 7.211], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "home": {"xyzwpr": [476.069, -23.502, -48.338, 178.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "high": {"xyzwpr": [476.069, -23.502, 851.663, 178.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_1": {
+      "xyzwpr": [-223.933, -923.501, 851.665, 177.745, -4.401, -23.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "above_2": {
+      "xyzwpr": [-23.933, -923.501, 851.665, 177.745, -4.401, -23.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "above_3": {
+      "xyzwpr": [326.066, -773.502, 851.666, 177.745, -4.401, -23.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "above_4": {
+      "xyzwpr": [676.065, -423.502, 851.666, 177.745, -4.401, -23.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "above_5": {"xyzwpr": [926.065, -73.502, 851.667, 177.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_6": {"xyzwpr": [876.065, 226.498, 851.667, 177.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "above_7": {"xyzwpr": [776.065, 376.498, 851.667, 177.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "below_1": {"xyzwpr": [776.065, 376.498, 101.668, 177.745, -4.401, -23.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1},
+    "below_2": {
+      "xyzwpr": [776.065, 376.498, -198.332, 177.745, -4.401, -23.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "below_3": {
+      "xyzwpr": [476.066, 376.499, -248.331, 178.745, -4.401, -103.127],
+      "config": [0, 0, 1, 1, 0, 0, 0],
+      "uf": 1,
+      "ut": 1
+    },
+    "below_4": {"xyzwpr": [276.066, 376.5, -248.331, 178.745, -4.401, -123.127], "config": [0, 0, 1, 1, 0, 0, 0], "uf": 1, "ut": 1}
+  },
+  "sequences": {
+    "load": [
+      {"robot": "move", "pose": "above_input"},
+      {"robot": "get", "station": 0},
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "put", "station": "{robot_station}"}
+    ],
+    "unload_pass": [
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "get", "station": "{robot_station}"},
+      {"robot": "move", "pose": "above_input"},
+      {"robot": "put", "station": 8}
+    ],
+    "unload_ng": [
+      {"robot": "move", "pose": "above_fixture_{fixture}"},
+      {"robot": "get", "station": "{robot_station}"},
+      {"robot": "move", "pose": "above_input"},
+      {"robot": "put", "station": 9}
+    ]
+  }
+}

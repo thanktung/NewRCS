@@ -1,0 +1,118 @@
+{
+  "identity": {
+    "bu": "",
+    "model": "Model",
+    "stations": ["Station1"],
+    "local_ip": ""
+  },
+
+  "mysql": {
+    "enabled": false,
+    "host": "10.169.100.78",
+    "port": 3306,
+    "user": "root",
+    "database": "rcs_dashboard",
+    "password_env": "RCS_DB_PASSWORD",
+    "connect_timeout_s": 5,
+    "flush_interval_s": 2.0
+  },
+  "outbox_path": "data/outbox.sqlite",
+
+  "employee": {
+    "url": "http://10.169.96.12/WS_ESD/CheckEmpRightWithEsd.asmx",
+    "timeout_s": 30,
+    "departments_path": "config/departments.json",
+    "offline_demo": false,
+    "auto_logout_s": 180,
+    "auto_logout_idle": false
+  },
+
+  "bridge": {"host": "192.168.5.6", "port": 5600, "token_env": "RCS_BRIDGE_TOKEN", "default_override": 10},
+
+  "ats": {
+    "heartbeat_s": 0.5,
+    "connect_timeout_s": 3.0,
+    "retry_s": 2.0,
+    "fixtures": {
+      "1": {"host": "192.168.5.6", "port": 8801, "station": "Station1", "robot_station": 1},
+      "2": {"host": "192.168.5.6", "port": 8802, "station": "Station1", "robot_station": 2},
+      "3": {"host": "192.168.5.6", "port": 8803, "station": "Station1", "robot_station": 3},
+      "4": {"host": "192.168.5.6", "port": 8804, "station": "Station1", "robot_station": 4},
+      "5": {"host": "192.168.5.6", "port": 8805, "station": "Station1", "robot_station": 5},
+      "6": {"host": "192.168.5.6", "port": 8806, "station": "Station1", "robot_station": 6},
+      "7": {"host": "192.168.5.6", "port": 8807, "station": "Station1", "robot_station": 7},
+      "8": {"host": "192.168.5.6", "port": 8808, "station": "Station1", "robot_station": 8},
+      "9": {"host": "192.168.5.6", "port": 8809, "station": "Station1", "robot_station": 9},
+      "10": {"host": "192.168.5.6", "port": 8810, "station": "Station1", "robot_station": 10},
+      "11": {"host": "192.168.5.6", "port": 8811, "station": "Station1", "robot_station": 11},
+      "12": {"host": "192.168.5.6", "port": 8812, "station": "Station1", "robot_station": 12},
+      "13": {"host": "192.168.5.6", "port": 8813, "station": "Station1", "robot_station": 13}
+    }
+  },
+
+  "end_effector": {
+    "_note": "Robot chỉ có MỘT End Effector. Trên đó có các tool nhỏ: heads = 8 cụm xy lanh lên/xuống + van hút + cảm biến áp suất (IO của controller FANUC, qua bridge); scanner = đầu đọc mã Keyence SR-710 / SR-X100; laser = đầu IL-1000 kiểm tra laser. Dùng trong sequence bằng bước {\"ee\": \"heads\" | \"scanner\" | \"laser\"}. ĐỊA CHỈ IO VÀ IP DƯỚI ĐÂY LÀ GIÁ TRỊ GIỮ CHỖ: sửa cho đúng dây rồi đặt enabled: true.",
+    "name": "End Effector",
+
+    "heads": {
+      "_note": "Mỗi đầu khai báo địa chỉ IO riêng, vd. RDO[1], RDI[3]. pressure_active = giá trị của cảm biến khi ĐÃ hút được; cylinder_down = giá trị ngõ ra làm đầu hút đi xuống. XY LANH = VAN ĐIỆN TỪ 2 COIL (5/2 giữ vị trí) + 2 cảm biến cuối hành trình: coil_down / coil_up là 2 ngõ ra (cấp điện MỘT coil để chạy, coil kia tắt trước, không bao giờ bật cả hai), cyl_down / cyl_up là 2 ngõ vào cảm biến. Có cảm biến thì chương trình chờ theo cảm biến (cylinder_timeout_s) thay vì chờ cố định cylinder_s. coil_active = mức cấp điện coil (mặc định 1); coil_pulse_s > 0 = chỉ cấp xung rồi tắt cả hai coil (0 = giữ cấp điện). Van 1 coil + lò xo: dùng 'cylinder' (một ngõ ra) thay cho coil_down / coil_up.",
+      "enabled": true,
+      "cylinder_s": 0.6, "vacuum_s": 0.3, "pressure_timeout_s": 1.0, "pressure_active": 1, "cylinder_down": 1,
+      "units": [
+        {"vacuum": "RDO[1]", "coil_down": "RDO[9]", "coil_up": "RDO[17]", "cyl_down": "RDI[41]", "cyl_up": "RDI[51]", "pressure": "RDI[1]"},
+        {"vacuum": "RDO[2]", "coil_down": "RDO[10]", "coil_up": "RDO[18]", "cyl_down": "RDI[42]", "cyl_up": "RDI[52]", "pressure": "RDI[2]"},
+        {"vacuum": "RDO[3]", "coil_down": "RDO[11]", "coil_up": "RDO[19]", "cyl_down": "RDI[43]", "cyl_up": "RDI[53]", "pressure": "RDI[3]"},
+        {"vacuum": "RDO[4]", "coil_down": "RDO[12]", "coil_up": "RDO[20]", "cyl_down": "RDI[44]", "cyl_up": "RDI[54]", "pressure": "RDI[4]"},
+        {"vacuum": "RDO[5]", "coil_down": "RDO[13]", "coil_up": "RDO[21]", "cyl_down": "RDI[45]", "cyl_up": "RDI[55]", "pressure": "RDI[5]"},
+        {"vacuum": "RDO[6]", "coil_down": "RDO[14]", "coil_up": "RDO[22]", "cyl_down": "RDI[46]", "cyl_up": "RDI[56]", "pressure": "RDI[6]"},
+        {"vacuum": "RDO[7]", "coil_down": "RDO[15]", "coil_up": "RDO[23]", "cyl_down": "RDI[47]", "cyl_up": "RDI[57]", "pressure": "RDI[7]"},
+        {"vacuum": "RDO[8]", "coil_down": "RDO[16]", "coil_up": "RDO[24]", "cyl_down": "RDI[48]", "cyl_up": "RDI[58]", "pressure": "RDI[8]"}
+      ]
+    },
+
+    "scanner": {
+      "_note": "Keyence SR-710 / SR-X100. type: tcp (host + port 9004) hoặc serial (port COMx + baud). length: độ dài mã (0 = không kiểm tra). pattern: regex mã phải khớp. retry: số lần thử thêm. Dùng bởi bước {\"ee\": \"scanner\"}. SỬA host/port cho đúng máy quét thật.",
+      "type": "tcp", "host": "192.168.5.6", "port": 9004, "model": "SR-X100",
+      "length": 0, "pattern": "", "retry": 2, "timeout_s": 3.0
+    },
+
+    "laser": {
+      "_note": "IL-1000: kết quả đọc dạng judgement qua IO của controller (ok = GO; high / low tùy chọn). active = giá trị khi judgement đúng. Dùng bởi bước {\"ee\": \"laser\", \"check\": \"ok\"}.",
+      "enabled": true, "model": "IL-1000",
+      "ok": "RDI[20]", "high": "RDI[21]", "low": "RDI[22]", "active": 1, "timeout_s": 1.0
+    }
+  },
+
+  "trays": {
+    "_note": "Kích thước tray CHỈ đặt ở đây (sửa rồi khởi động lại). rows = số hàng, cols = số cột. Bỏ một tray khỏi danh sách thì tray đó không được hiển thị / đếm.",
+    "input": {"rows": 6, "cols": 8},
+    "ng":    {"rows": 6, "cols": 8}
+  },
+
+  "flow": {
+    "_note": "CHẾ ĐỘ CHẠY CHÍNH: tray = robot phục vụ TẤT CẢ box bằng TẤT CẢ tay hút. Lấy hàng chưa test từ tray Input (tọa độ ô tính từ 3 điểm O, X, Y, đủ 6 giá trị), đổi hàng ở box test xong, PASS trả về đúng ô cũ, NG test lại ở box khác (tối đa max_attempts lần) rồi mới vào tray NG. SỐ TAY HÚT = số phần tử của end_effector.heads.units (tối thiểu 2): thêm / bớt một phần tử, dạy điểm head_k_at_O tương ứng rồi khởi động lại. Đổi mode về classic để quay lại chế độ cũ (sequence load / unload_*). Các điểm phải dạy: head_k_at_O, scanner_at_O, input_O/X/Y, ng_O/X/Y, fixture_N (cửa sổ Thủ công -> Hiệu chuẩn luồng tray).",
+    "mode": "tray",
+    "max_attempts": 3,
+    "keep_free_heads": 1,
+    "max_pick": 8, "max_sort": 8, "pick_ahead": 0, "top_up_when_idle": true,
+    "scan": true, "override": null, "check_timeout_s": 1.0,
+    "via_tray": "", "via_fixtures": "",
+    "laser_check": {"enabled": true, "places": ["box", "input"], "offsets": [[-15, 0, 0], [15, 0, 0]], "timeout_s": 1.0},
+    "stop_robot_on_drop": true
+  },
+
+  "robot_start": {
+    "_note": "Khởi động chương trình robot qua tín hiệu UOP (UI map sang SDI cùng chỉ số). rsr = chương trình RSR (1 -> RSR0001, chọn bằng xung UI9). Trình tự: bật SDI1-3 và SDI8, xung SDI9, xung SDI5 (reset) rồi đọc UO6 FAULT, xung SDI6 (start) rồi đọc UO3 PROGRUN. pulse_s = độ rộng xung; reset_wait_s / run_wait_s / stop_wait_s = thời gian chờ UO6 về 0 / UO3 lên 1 / UO3 về 0. Dừng robot: xung SDI4 (CSTOPI), tắt SDI1-3, kiểm tra UO3 = 0. Cần bridge cho ghi loại SDI (io_write_kinds).",
+    "rsr": 1, "pulse_s": 1, "reset_wait_s": 3.0, "run_wait_s": 5.0, "stop_wait_s": 3.0, "poll_s": 0.1, "monitor_s": 0.5
+  },
+
+  "consecutive_ng": {"limit": 3, "stop_fixture": true},
+
+  "engine": {
+    "reload_after_unload": true,
+    "auto_start_test": true,
+    "send_dut_out": false,
+    "test_timeout_s": 300,
+    "sequences_path": "config/sequences.json"
+  }
+}

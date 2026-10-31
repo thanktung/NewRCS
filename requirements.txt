@@ -1,0 +1,5 @@
+# NewRCS (64-bit Python 3.11). The robot bridge (bridge32/) needs only pywin32 on a 32-bit Python.
+PySide6>=6.6
+pymysql>=1.1
+requests>=2.31
+pyserial>=3.5            # only for barcode readers on a COM port (RS-232); TCP readers need nothing
