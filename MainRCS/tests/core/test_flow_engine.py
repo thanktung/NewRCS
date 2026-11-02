@@ -40,6 +40,10 @@ class RunTests(EngineCase):
         self.assertEqual(self.book().ng_used, 1)
         self.assertEqual(self.book().cells.count(D.EMPTY), 1)                         # the cell of the NG product stays empty
         self.assertEqual(self.book().cells.count(D.PASS), 7)
+        t = self.eng.snapshot()["totals"]                                           # per product: 8 products, 2 retests of the bad one
+        self.assertEqual((t["total"], t["passed"], t["ng"], t["retest"]), (8, 7, 1, 2))
+        self.assertEqual(t["yield_pct"], 100.0 * 7 / 8)
+        self.assertIsNotNone(t["uph"])
 
     def test_a_retest_that_passes_ends_in_the_input_tray(self):
         self.start()
@@ -47,6 +51,8 @@ class RunTests(EngineCase):
         d = next(d for d in self.book().duts.values() if d.origin == 5)
         self.assertEqual((d.final, d.tests_made, d.location[0]), ("PASS", 2, D.TRAY))
         self.assertEqual(self.book().cells, [D.PASS] * 8)
+        t = self.eng.snapshot()["totals"]
+        self.assertEqual((t["total"], t["passed"], t["ng"], t["retest"]), (8, 8, 0, 1))
 
     def test_every_result_is_reported_with_its_own_test(self):
         self.start()

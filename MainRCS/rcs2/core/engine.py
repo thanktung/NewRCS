@@ -125,6 +125,12 @@ class Engine:
         self._disarm_after_job = False
         self._job_seq = 0
         self._current = None
+        # Số liệu tổng hợp tính theo SẢN PHẨM (không phải theo từng lần test): total = số hàng đã đặt vào box (lần đầu),
+        # retest = số lần đặt lại vào box khác, passed / ng = số hàng có kết luận cuối. UPH chỉ cập nhật khi có thêm hàng pass.
+        self._tot = {"total": 0, "passed": 0, "ng": 0, "retest": 0}
+        self._uph = None
+        self._run_s = 0.0                   # tổng thời gian ở trạng thái RUNNING (giây)
+        self._run_mark = None
         self._events = queue.Queue()
         self._lock = threading.RLock()
         self._stop = threading.Event()
@@ -219,8 +225,6 @@ class Engine:
                     "dut_inside": f.dut_inside, "host": f.ats_host,
                     "dut": f.dut.id if f.dut is not None else None, "cell": f.dut.origin if f.dut is not None else None,
                     "tests": f.dut.tests_made if f.dut is not None else 0})
-            total = sum(f.total for f in self.fixtures.values())
-            passed = sum(f.passed for f in self.fixtures.values())
             return {
                 "run_state": self.run_state, "fault_text": self.fault_text,
                 "fixtures": fixtures,
@@ -230,7 +234,8 @@ class Engine:
                 "program_running": getattr(self.robot, "program_state", None),    # UO[3] PROGRUN: True / False / None
                 "alarms": self.errors.active() if hasattr(self.errors, "active") else [],
                 "sink": self.sink.stats() if self.sink else {},
-                "totals": {"total": total, "passed": passed, "yield_pct": (100.0 * passed / total) if total else None},
+                "totals": dict(self._tot, uph=self._uph,
+                               yield_pct=(100.0 * self._tot["passed"] / self._tot["total"]) if self._tot["total"] else None),
                 "trays": {kind: t.snapshot() for kind, t in self.trays.items()},
                 "flow": self.flow.snapshot(),
             }
@@ -459,7 +464,16 @@ class Engine:
             f.consec_ng = 0
             if self.ng_stop:
                 f.enabled = False       # không nạp DUT mới; DUT đã test vẫn được lấy ra (RCS cũ để nó lại bên trong)
-        self._log("info", self.flow.result(f, label, elapsed, self.fixtures, self.clock())[1])
+        verdict, text = self.flow.result(f, label, elapsed, self.fixtures, self.clock())
+        self._log("info", text)
+        self._tot["ng"] += len(self.flow.settled)              # retest không còn box nào để tới: NG cuối cùng
+        if verdict == "NG":
+            self._tot["ng"] += 1
+        elif verdict == "PASS":
+            self._tot["passed"] += 1
+            self._accrue_run_time(self.clock())
+            if self._run_s > 0:
+                self._uph = self._tot["passed"] * 3600.0 / self._run_s
         # planner lấy sản phẩm ra khi robot rảnh
 
     # ---- việc robot (việc của planner) ---------------------------------- #
@@ -531,12 +545,16 @@ class Engine:
                 f = self.fixtures[commit["fixture"]]
                 waited = self.clock() - f.idle_since if f.idle_since else 0.0
                 self._log("debug", "box %d chờ %.1fs trước khi nhận sản phẩm" % (f.number, waited))
+            dut = self.flow.book.on_head(commit["head"]) if commit["op"] == "place_box" else None
+            retest = dut is not None and dut.tests_made > 0
             text = self.flow.commit(commit, self.fixtures, self.clock())
         except Exception as ex:
             log.exception("flow commit %r failed", commit)
             self._fail_flow("sổ sách luồng tray sai lệch (%s: %s): hãy kiểm tra tay hút và box, rồi 'Xóa trạng thái luồng'"
                             % (type(ex).__name__, ex), None)
             return
+        if commit["op"] == "place_box":
+            self._tot["retest" if retest else "total"] += 1
         self._log("debug" if commit["op"] == "sn" else "info", text)
         if commit["op"] == "take_tray" and "input" in self.trays:
             self.trays["input"].advance()
@@ -610,7 +628,13 @@ class Engine:
             if self.errors.raise_error("9206", "tray Input hết hàng, đã xử lý xong: hãy thay tray Input rồi bấm 'Nạp lại'", key="tray_input"):
                 self._log("warn", "tray Input hết hàng và mọi sản phẩm đã được cất: hãy thay tray Input rồi bấm 'Nạp lại'")
 
+    def _accrue_run_time(self, now):
+        if self.run_state == RUNNING and self._run_mark is not None:
+            self._run_s += now - self._run_mark
+        self._run_mark = now if self.run_state == RUNNING else None
+
     def _tick(self, now):
+        self._accrue_run_time(now)
         self._watch_program(now)
         self._watch_trays()
         for f in self.fixtures.values():

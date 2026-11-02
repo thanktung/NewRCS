@@ -127,6 +127,7 @@ class FlowController:
         self.book = self._new_book()
         self.layout = None
         self.sn_by_cell = {}
+        self.settled = []                                # các DUT vừa thành NG cuối cùng do lần `result` gần nhất
 
     def _new_book(self):
         t = self.trays
@@ -230,7 +231,7 @@ class FlowController:
         eligible = [x.number for x in fixtures.values() if x.enabled and x.connected and x.ats_ready]
         verdict = self.book.result(d, label, elapsed, eligible)
         f.finished, f.idle_since = True, now
-        self.book.settle_stuck(eligible)
+        self.settled = self.book.settle_stuck(eligible)
         text = "product %d (picked from cell %d): test %d/%d in box %d = %s -> %s" % (
             d.id, d.origin + 1, d.tests_made, self.book.max_attempts, f.number, label,
             {"PASS": "passed, goes into the output tray" if self.book.has_outputs else "passed, goes into the first empty cell of the input tray",

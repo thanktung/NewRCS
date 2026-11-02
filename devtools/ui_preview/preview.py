@@ -182,7 +182,7 @@ def snap_running():
         "current_job": ("flow", 7),
         "robot": dict(ROBOT_OK), "robot_link": True, "program_running": True, "alarms": [],
         "sink": {"enabled": True, "pending": 0},
-        "totals": {"total": 37, "passed": 31, "yield_pct": 83.8},
+        "totals": {"total": 37, "passed": 31, "ng": 4, "retest": 9, "uph": 62.4, "yield_pct": 83.8},
         "trays": {"input": {"kind": "input", "rows": 5, "cols": 8, "capacity": 40, "done": 23, "count": 17, "exhausted": False},
                   "ng": {"kind": "ng", "rows": 4, "cols": 6, "capacity": 24, "done": 5, "count": 5, "exhausted": False}},
     }

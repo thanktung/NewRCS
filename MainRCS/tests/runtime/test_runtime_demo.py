@@ -42,7 +42,7 @@ class RuntimeDemoTest(unittest.TestCase):
                 rt.engine.set_enabled(n, True)
             time.sleep(0.3)
             rt.engine.start_run()
-            wait_until(lambda: rt.engine.snapshot()["totals"]["total"] >= 4, what="4 finished tests")
+            wait_until(lambda: len([1 for _, k, p in rt.outbox.pending(1000) if k == "result"]) >= 4, what="4 finished tests")
             snap = rt.engine.snapshot()
             self.assertNotEqual(snap["run_state"], E.RUN_FAULT, snap["fault_text"])
             self.assertTrue(snap["robot"]["armed"])

@@ -1,4 +1,4 @@
-"""KPI strip of the main window (total / passed / failed / yield)."""
+"""KPI strip of the main window (total / passed / failed / retest / UPH / yield)."""
 from PySide6 import QtWidgets
 
 from ..kit import fluent as F
@@ -18,7 +18,7 @@ def _stat(name):
 
 
 class TotalsPanel(Surface):
-    """Production KPI strip: total / pass / NG / yield."""
+    """Production KPI strip: total / pass / NG / retest / UPH / yield."""
 
     def __init__(self):
         super().__init__()
@@ -26,7 +26,8 @@ class TotalsPanel(Surface):
         lay.setContentsMargins(16, 8, 16, 10)
         lay.setSpacing(0)
         self._v = {}
-        items = (("total", "Tổng đã test"), ("passed", "Đạt"), ("ng", "Không đạt"), ("yield", "Tỷ lệ đạt"))
+        items = (("total", "Tổng đã test"), ("passed", "Đạt"), ("ng", "Không đạt"), ("retest", "Retest"),
+                 ("uph", "UPH"), ("yield", "Tỷ lệ đạt"))
         for i, (key, name) in enumerate(items):
             if i:
                 line = QtWidgets.QFrame()
@@ -47,9 +48,12 @@ class TotalsPanel(Surface):
             self._v[key] = v
         self._v["passed"].setStyleSheet("color: %s;" % F.SUCCESS)
         self._v["ng"].setStyleSheet("color: %s;" % F.DANGER)
+        self._v["retest"].setStyleSheet("color: %s;" % F.WARNING)
 
     def update_from(self, totals):
         self._v["total"].setText(str(totals["total"]))
         self._v["passed"].setText(str(totals["passed"]))
-        self._v["ng"].setText(str(totals["total"] - totals["passed"]))
+        self._v["ng"].setText(str(totals["ng"]))
+        self._v["retest"].setText(str(totals["retest"]))
+        self._v["uph"].setText("-" if totals["uph"] is None else "%.1f" % totals["uph"])
         self._v["yield"].setText("-" if totals["yield_pct"] is None else "%.1f%%" % totals["yield_pct"])
